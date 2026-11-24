@@ -1,0 +1,20 @@
+{
+  "name": "claude-deck",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "watch": "node build.mjs --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@elgato/streamdeck": "^3.0.6"
+  },
+  "devDependencies": {
+    "@elgato/cli": "^1.10.5",
+    "@types/node": "^20.19.43",
+    "esbuild": "^0.28.2",
+    "typescript": "^7.0.2"
+  }
+}

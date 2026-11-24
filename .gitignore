@@ -1,0 +1,12 @@
+# Claude configuration and data
+CLAUDE.md
+CLAUDE.local.md
+.claude/
+.mcp.json
+graphify-out/
+
+# Dependencies and build output
+node_modules/
+*.sdPlugin/bin/
+*.sdPlugin/logs/
+*.streamDeckPlugin

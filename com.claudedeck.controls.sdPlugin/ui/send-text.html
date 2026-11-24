@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<script src="sdpi-components.js"></script>
+		<style>
+			.help {
+				margin: 4px 0 0 0;
+				padding: 0;
+				font-size: 12px;
+				line-height: 1.5;
+				opacity: 0.75;
+			}
+			.help code {
+				font-family: Consolas, monospace;
+			}
+		</style>
+	</head>
+	<body>
+		<sdpi-item label="Text">
+			<sdpi-textfield setting="text" placeholder="yes"></sdpi-textfield>
+		</sdpi-item>
+
+		<sdpi-item label="Submit">
+			<sdpi-checkbox setting="submit" default="true" label="Press Enter after"></sdpi-checkbox>
+		</sdpi-item>
+
+		<sdpi-item label="Keys">
+			<p class="help">
+				Wrap key names in braces to press them:<br />
+				<code>{Enter}</code> <code>{Esc}</code> <code>{Tab}</code> <code>{Space}</code> <code>{Backspace}</code>
+				<code>{Up}</code> <code>{Down}</code> <code>{Left}</code> <code>{Right}</code> <code>{F1}</code>&ndash;<code>{F12}</code><br />
+				Add modifiers with <code>+</code>: <code>{Shift+Tab}</code> <code>{Ctrl+C}</code><br />
+				Type a literal brace with <code>{{</code> or <code>}}</code>.
+			</p>
+		</sdpi-item>
+	</body>
+</html>
