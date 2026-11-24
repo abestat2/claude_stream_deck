@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -81,10 +81,10 @@ describe.skipIf(!isWindows)("install-hooks node command", () => {
 			const run = install([dir, SYSTEM32]);
 			expect(run.status).toBe(0);
 			expect(run.command).toBeDefined();
-			const expected = join(dir, "node.cmd").replace(/\\/g, "/");
 			const { exe } = split(run.command as string);
-			expect(exe.toLowerCase()).toBe(expected.toLowerCase());
-			expect(run.command?.startsWith(`${expected} "`)).toBe(true);
+			expect(exe).toMatch(/^[A-Za-z]:\//);
+			expect(realpathSync.native(exe).toLowerCase()).toBe(realpathSync.native(join(dir, "node.cmd")).toLowerCase());
+			expect(run.command?.startsWith(`${exe} "`)).toBe(true);
 			expect(run.command).not.toContain("\\");
 			expect(exe).not.toMatch(/\s/);
 		});
@@ -94,7 +94,7 @@ describe.skipIf(!isWindows)("install-hooks node command", () => {
 			const second = fakeNode("second-node");
 			const run = install([first, second, SYSTEM32]);
 			const { exe } = split(run.command as string);
-			expect(exe.toLowerCase()).toBe(join(first, "node.cmd").replace(/\\/g, "/").toLowerCase());
+			expect(realpathSync.native(exe).toLowerCase()).toBe(realpathSync.native(join(first, "node.cmd")).toLowerCase());
 		});
 
 		it("converts a path that contains a space to its short form, or falls back to node", () => {
