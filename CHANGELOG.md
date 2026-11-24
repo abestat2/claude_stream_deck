@@ -1,5 +1,7 @@
 # Changelog
 
+Releases after 0.1.0 are published automatically when changes reach the main branch. Their notes are on the GitHub releases page.
+
 ## 0.1.0 - 2026-11-24
 
 First release.

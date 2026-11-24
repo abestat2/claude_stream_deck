@@ -1,18 +1,28 @@
 name: Release
 
+# Every change that reaches the main branch is released. The version is the minor number of the latest
+# release plus one (0.1.0 is followed by 0.2.0), chosen from the release tags by scripts/next-version.mjs.
+
 on:
   push:
-    tags: ["v*"]
+    branches: [master, main]
 
 permissions:
   contents: write
 
+# Releases run one at a time so two merges in quick succession get different versions.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
 jobs:
   release:
-    name: Build and publish the release
+    name: Test and publish the release
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
@@ -22,14 +32,16 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Check that the tag matches the package version
+      - name: Choose the version
+        id: version
         shell: bash
         run: |
-          version="$(node -p "require('./package.json').version")"
-          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
-            echo "Tag $GITHUB_REF_NAME does not match package version $version" >&2
-            exit 1
-          fi
+          version="$(git tag --list 'v*' | node scripts/next-version.mjs)"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Releasing $version"
+
+      - name: Apply the version
+        run: node scripts/set-version.mjs "${{ steps.version.outputs.version }}"
 
       - name: Type-check
         run: npm run typecheck
@@ -40,12 +52,12 @@ jobs:
       - name: Build, validate, and package
         run: npm run package
 
-      - name: Extract the release notes
-        shell: bash
-        run: node scripts/release-notes.mjs "${GITHUB_REF_NAME#v}" > release-notes.md
-
       - name: Publish the release
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release create "$GITHUB_REF_NAME" dist/*.streamDeckPlugin --title "Claude Deck $GITHUB_REF_NAME" --notes-file release-notes.md
+        run: |
+          gh release create "v${{ steps.version.outputs.version }}" dist/*.streamDeckPlugin \
+            --target "$GITHUB_SHA" \
+            --title "Claude Deck v${{ steps.version.outputs.version }}" \
+            --generate-notes

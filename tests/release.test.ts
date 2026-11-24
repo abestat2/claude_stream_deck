@@ -1,98 +1,22 @@
-import { spawnSync } from "node:child_process";
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
-import { afterAll, describe, expect, it } from "vitest";
+import { existsSync, readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { describe, expect, it } from "vitest";
 
 const ROOT = resolve(__dirname, "..");
 const read = (path: string): string => readFileSync(resolve(ROOT, path), "utf8");
 const pkg = JSON.parse(read("package.json"));
 
-const SCRIPT = resolve(ROOT, "scripts/release-notes.mjs");
-const temp = mkdtempSync(join(tmpdir(), "release-notes-"));
-afterAll(() => rmSync(temp, { recursive: true, force: true }));
-
-function notes(version: string | undefined, changelog?: string): { status: number | null; stdout: string; stderr: string } {
-	const args = [SCRIPT];
-	if (version !== undefined) {
-		args.push(version);
-	}
-	if (changelog !== undefined) {
-		const file = join(temp, `changelog-${Math.random().toString(36).slice(2)}.md`);
-		writeFileSync(file, changelog);
-		args.push(file);
-	}
-	const result = spawnSync(process.execPath, args, { encoding: "utf8" });
-	return { status: result.status, stdout: result.stdout, stderr: result.stderr };
-}
-
-describe("release notes script", () => {
-	const changelog = ["# Changelog", "", "## 2.0.0 - 2026-02-01", "", "Second release.", "", "- Added a thing", "", "## 1.0.0", "", "First release.", ""].join("\n");
-
-	it("prints the section for a version with a date in its heading", () => {
-		const result = notes("2.0.0", changelog);
-		expect(result.status).toBe(0);
-		expect(result.stdout.trim()).toBe("Second release.\n\n- Added a thing");
-	});
-
-	it("prints the last section, which has no heading after it", () => {
-		expect(notes("1.0.0", changelog).stdout.trim()).toBe("First release.");
-	});
-
-	it("handles Windows line endings", () => {
-		const result = notes("2.0.0", changelog.replace(/\n/g, "\r\n"));
-		expect(result.status).toBe(0);
-		expect(result.stdout).not.toContain("\r");
-		expect(result.stdout.trim()).toBe("Second release.\n\n- Added a thing");
-	});
-
-	it("does not match a version that is only a prefix of a heading", () => {
-		const result = notes("2.0", changelog);
-		expect(result.status).toBe(1);
-		expect(result.stderr).toContain("No changelog section for version 2.0");
-	});
-
-	it("does not match a version that only appears inside a section", () => {
-		const result = notes("3.0.0", `${changelog}\nMentions 3.0.0 in text.\n`);
-		expect(result.status).toBe(1);
-	});
-
-	it("fails for a version with no section", () => {
-		const result = notes("9.9.9", changelog);
-		expect(result.status).toBe(1);
-		expect(result.stdout).toBe("");
-		expect(result.stderr).toContain("No changelog section for version 9.9.9");
-	});
-
-	it("fails for a section with no content", () => {
-		const result = notes("1.0.0", "## 1.0.0\n\n## 0.9.0\n\nOlder.\n");
-		expect(result.status).toBe(1);
-		expect(result.stderr).toContain("empty");
-	});
-
-	it("fails with a usage message when no version is given", () => {
-		const result = notes(undefined);
-		expect(result.status).toBe(2);
-		expect(result.stderr).toContain("Usage:");
-	});
-
-	it("treats the dots in a version literally", () => {
-		expect(notes("1x0x0", changelog).status).toBe(1);
-	});
-});
-
 describe("changelog", () => {
-	it("has a non-empty section for the current package version", () => {
-		const result = notes(pkg.version);
-		expect(result.status, result.stderr).toBe(0);
-		expect(result.stdout.trim().length).toBeGreaterThan(20);
+	it("starts with a title", () => {
+		expect(read("CHANGELOG.md").startsWith("# Changelog")).toBe(true);
 	});
 
-	it("starts with a title and lists the newest version first", () => {
-		const text = read("CHANGELOG.md");
-		expect(text.startsWith("# Changelog")).toBe(true);
-		const first = /^## (\d+\.\d+\.\d+)/m.exec(text)?.[1];
-		expect(first).toBe(pkg.version);
+	it("records the first release", () => {
+		expect(read("CHANGELOG.md")).toMatch(/^## 0\.1\.0 - \d{4}-\d{2}-\d{2}$/m);
+	});
+
+	it("says where the notes for later releases are", () => {
+		expect(read("CHANGELOG.md")).toContain("GitHub release");
 	});
 });
 
@@ -107,42 +31,22 @@ describe("workflows", () => {
 		}
 	});
 
-	it("only call npm scripts that exist", () => {
+	it("only call npm scripts and project scripts that exist", () => {
 		for (const text of [ci, release]) {
 			for (const match of text.matchAll(/npm run ([\w:-]+)/g)) {
 				expect(typeof pkg.scripts[match[1] as string], `npm run ${match[1]}`).toBe("string");
 			}
+			for (const match of text.matchAll(/node (scripts\/[\w.-]+\.mjs)/g)) {
+				expect(existsSync(resolve(ROOT, match[1] as string)), match[1]).toBe(true);
+			}
 		}
 	});
 
-	it("check runs on pushes to the main branch and on pull requests, and installs from the lockfile", () => {
-		expect(ci).toMatch(/push:\s+branches: \[master, main\]/);
-		expect(ci).toContain("pull_request:");
-		expect(ci).toContain("npm ci");
-		expect(ci.indexOf("npm run typecheck")).toBeLessThan(ci.indexOf("npm test"));
-		expect(ci.indexOf("npm test")).toBeLessThan(ci.indexOf("npm run package"));
-		expect(ci).toContain("actions/upload-artifact@v4");
-		expect(ci).toMatch(/contents: read/);
-	});
-
-	it("release runs on version tags and needs write access to contents only", () => {
-		expect(release).toMatch(/tags: \["v\*"\]/);
-		expect(release).toMatch(/contents: write/);
-		expect(release).not.toMatch(/pull_request/);
-	});
-
-	it("release checks the tag against the package version before testing and packaging", () => {
-		const check = release.indexOf("does not match package version");
-		expect(check).toBeGreaterThan(-1);
-		expect(check).toBeLessThan(release.indexOf("npm test"));
-		expect(release.indexOf("npm test")).toBeLessThan(release.indexOf("npm run package"));
-	});
-
-	it("release takes its notes from the changelog and attaches the package", () => {
-		expect(release).toContain("scripts/release-notes.mjs");
-		expect(release).toContain("gh release create");
-		expect(release).toContain("dist/*.streamDeckPlugin");
-		expect(release).toContain("--notes-file");
+	it("install from the lockfile and read the whole history so the release tags are available", () => {
+		for (const text of [ci, release]) {
+			expect(text).toContain("npm ci");
+			expect(text).toMatch(/fetch-depth: 0/);
+		}
 	});
 
 	it("do not contain secrets", () => {
@@ -150,6 +54,80 @@ describe("workflows", () => {
 			expect(text).not.toMatch(/ghp_|github_pat_|-----BEGIN/);
 		}
 		expect(release).toContain("secrets.GITHUB_TOKEN");
+	});
+});
+
+describe("checks workflow", () => {
+	const ci = read(".github/workflows/ci.yml");
+
+	it("runs on branches other than the main branch and on pull requests into it", () => {
+		expect(ci).toMatch(/push:\s+branches-ignore: \[master, main\]/);
+		expect(ci).toMatch(/pull_request:\s+branches: \[master, main\]/);
+	});
+
+	it("only reads the repository", () => {
+		expect(ci).toMatch(/permissions:\s+contents: read/);
+		expect(ci).not.toContain("contents: write");
+	});
+
+	it("shares one concurrency group between a push and a pull request of the same branch", () => {
+		expect(ci).toContain("group: ci-${{ github.head_ref || github.ref_name }}");
+		expect(ci).toContain("cancel-in-progress: true");
+	});
+
+	it("builds the head of a pull request, not the merge result", () => {
+		expect(ci).toContain("ref: ${{ github.event.pull_request.head.sha || github.sha }}");
+	});
+
+	it("chooses the branch version from the commits beyond the default branch", () => {
+		expect(ci).toContain("github.event.repository.default_branch");
+		expect(ci).toContain("git rev-list --count --no-merges");
+		expect(ci).toContain("node scripts/next-version.mjs --branch");
+	});
+
+	it("applies the version, then type-checks, tests, packages, and uploads the package under its version", () => {
+		const order = ["next-version.mjs --branch", "set-version.mjs", "npm run typecheck", "npm test", "npm run package", "upload-artifact"].map((s) => ci.indexOf(s));
+		expect(order.every((i) => i > -1)).toBe(true);
+		expect([...order].sort((a, b) => a - b)).toEqual(order);
+		expect(ci).toContain("name: claude-deck-${{ steps.version.outputs.version }}");
+	});
+});
+
+describe("release workflow", () => {
+	const release = read(".github/workflows/release.yml");
+
+	it("runs on pushes to the main branch only", () => {
+		expect(release).toMatch(/push:\s+branches: \[master, main\]/);
+		expect(release).not.toContain("pull_request");
+		expect(release).not.toContain("tags:");
+	});
+
+	it("needs write access to contents only", () => {
+		expect(release).toMatch(/permissions:\s+contents: write/);
+		expect(release).not.toMatch(/(issues|pull-requests|actions|packages|deployments): write/);
+	});
+
+	it("runs one release at a time without cancelling a release in progress", () => {
+		expect(release).toContain("group: release");
+		expect(release).toContain("cancel-in-progress: false");
+	});
+
+	it("chooses the version from the release tags without a branch option", () => {
+		expect(release).toContain("git tag --list 'v*' | node scripts/next-version.mjs");
+		expect(release).not.toContain("next-version.mjs --branch");
+	});
+
+	it("applies the version, then type-checks, tests, packages, and publishes", () => {
+		const order = ["next-version.mjs", "set-version.mjs", "npm run typecheck", "npm test", "npm run package", "gh release create"].map((s) => release.indexOf(s));
+		expect(order.every((i) => i > -1)).toBe(true);
+		expect([...order].sort((a, b) => a - b)).toEqual(order);
+	});
+
+	it("publishes the package at the tested commit with generated notes", () => {
+		expect(release).toContain('gh release create "v${{ steps.version.outputs.version }}"');
+		expect(release).toContain("dist/*.streamDeckPlugin");
+		expect(release).toContain('--target "$GITHUB_SHA"');
+		expect(release).toContain("--generate-notes");
 	});
 });
 
