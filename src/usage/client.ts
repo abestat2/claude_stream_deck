@@ -109,6 +109,8 @@ export function parseUsage(body: unknown): Partial<Record<WindowId, UsageWindow>
 export class UsageService extends EventEmitter {
 	private current: UsageState = { windows: {}, fetchedAt: undefined, error: undefined };
 	private lastAttempt = 0;
+	/** Epoch milliseconds of the last reading obtained from the usage service itself. */
+	private lastOwnReading: number | undefined;
 	private waitUntil = 0;
 	private inFlight = false;
 
@@ -124,7 +126,7 @@ export class UsageService extends EventEmitter {
 	 */
 	ingestStatusLine(rateLimits: unknown): void {
 		const limits = (typeof rateLimits === "object" && rateLimits !== null ? rateLimits : {}) as Record<string, unknown>;
-		const own = this.current.fetchedAt;
+		const own = this.lastOwnReading;
 		if (own !== undefined && !this.current.error && Date.now() - own < STATUS_LINE_FALLBACK_AFTER_MS) {
 			return;
 		}
@@ -156,7 +158,11 @@ export class UsageService extends EventEmitter {
 		this.inFlight = true;
 		this.lastAttempt = now;
 		try {
-			this.update(await this.request());
+			const result = await this.request();
+			if (result.windows) {
+				this.lastOwnReading = Date.now();
+			}
+			this.update(result);
 		} finally {
 			this.inFlight = false;
 		}

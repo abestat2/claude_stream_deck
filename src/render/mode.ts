@@ -24,7 +24,7 @@ export function modeStyle(mode: string | undefined): ModeStyle {
 	if (!mode) {
 		return { name: "--", color: LABEL };
 	}
-	return MODES[mode] ?? { name: mode, color: VALUE };
+	return Object.hasOwn(MODES, mode) ? (MODES[mode] as ModeStyle) : { name: mode, color: VALUE };
 }
 
 function lines(name: string): string[] {
