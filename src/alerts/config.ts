@@ -18,15 +18,13 @@ export const DEFAULT_ALERT_SETTINGS: AlertSettings = { sound: true, toast: true,
  */
 export function parseAlertSettings(raw: unknown): AlertSettings {
 	const values = (typeof raw === "object" && raw !== null ? raw : {}) as Record<string, unknown>;
-	const minutes = Number(values.escalateMinutes);
+	const raw = values.escalateMinutes;
+	const minutes = typeof raw === "number" ? raw : typeof raw === "string" && raw.trim() !== "" ? Number(raw) : Number.NaN;
 	return {
 		sound: values.alertSound !== false,
 		toast: values.alertToast !== false,
 		onDone: values.alertOnDone === true,
-		escalateMinutes:
-			values.escalateMinutes !== undefined && values.escalateMinutes !== "" && Number.isFinite(minutes) && minutes >= 0
-				? minutes
-				: DEFAULT_ALERT_SETTINGS.escalateMinutes,
+		escalateMinutes: Number.isFinite(minutes) && minutes >= 0 ? minutes : DEFAULT_ALERT_SETTINGS.escalateMinutes,
 	};
 }
 
