@@ -5,6 +5,8 @@ import { createNotifier } from "./alerts/notifier";
 import { ClaudeStatus } from "./actions/claude-status";
 import { Connection } from "./actions/connection";
 import { ModelPicker } from "./actions/model-picker";
+import { PermissionMode } from "./actions/permission-mode";
+import { PermissionResponse } from "./actions/permission";
 import { SavedPrompts } from "./actions/saved-prompts";
 import { SendText } from "./actions/send-text";
 import { SessionOverview } from "./actions/session-overview";
@@ -47,6 +49,8 @@ streamDeck.actions.registerAction(new ModelPicker());
 streamDeck.actions.registerAction(new SavedPrompts());
 streamDeck.actions.registerAction(new Usage(usage));
 streamDeck.actions.registerAction(new Connection(store, usage));
+streamDeck.actions.registerAction(new PermissionResponse(store));
+streamDeck.actions.registerAction(new PermissionMode(store));
 
 const hookServer = startHookServer(store, streamDeck.logger);
 

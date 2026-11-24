@@ -1,3 +1,5 @@
+import { wrapText } from "./text";
+
 const LABEL = "#8a8178";
 const DIM = "#6f675f";
 const VALUE = "#f1ece4";
@@ -19,44 +21,7 @@ function escapeXml(value: string): string {
  * ending with an ellipsis when the label does not fit.
  */
 export function wrapLabel(label: string): string[] {
-	const lines: string[] = [];
-	let current = "";
-	let truncated = false;
-
-	const push = (line: string): void => {
-		if (lines.length < MAX_LINES) {
-			lines.push(line);
-		} else {
-			truncated = true;
-		}
-	};
-
-	for (const word of label.split(/\s+/).filter((w) => w.length > 0)) {
-		let remaining = word;
-		while (remaining.length > MAX_LINE_CHARS) {
-			if (current) {
-				push(current);
-				current = "";
-			}
-			push(remaining.slice(0, MAX_LINE_CHARS));
-			remaining = remaining.slice(MAX_LINE_CHARS);
-		}
-		if (current && current.length + 1 + remaining.length > MAX_LINE_CHARS) {
-			push(current);
-			current = remaining;
-		} else {
-			current = current ? `${current} ${remaining}` : remaining;
-		}
-	}
-	if (current) {
-		push(current);
-	}
-
-	if (truncated && lines.length > 0) {
-		const last = lines[lines.length - 1] ?? "";
-		lines[lines.length - 1] = last.slice(0, MAX_LINE_CHARS - 1).trimEnd() + "…";
-	}
-	return lines;
+	return wrapText(label, MAX_LINE_CHARS, MAX_LINES);
 }
 
 /**

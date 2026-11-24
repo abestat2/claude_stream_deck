@@ -175,6 +175,39 @@
           "ShowTitle": false
         }
       ]
+    },
+    {
+      "Name": "Permission Response",
+      "UUID": "com.claudedeck.controls.permission",
+      "Icon": "imgs/actions/permission/icon",
+      "Tooltip": "Shows a pending tool permission request and answers it: allow, allow always, or deny.",
+      "PropertyInspectorPath": "ui/permission.html",
+      "Controllers": [
+        "Keypad"
+      ],
+      "UserTitleEnabled": false,
+      "States": [
+        {
+          "Image": "imgs/actions/permission/key",
+          "ShowTitle": false
+        }
+      ]
+    },
+    {
+      "Name": "Permission Mode",
+      "UUID": "com.claudedeck.controls.permission-mode",
+      "Icon": "imgs/actions/permission-mode/icon",
+      "Tooltip": "Shows the current permission mode and cycles it with Shift+Tab.",
+      "Controllers": [
+        "Keypad"
+      ],
+      "UserTitleEnabled": false,
+      "States": [
+        {
+          "Image": "imgs/actions/permission-mode/key",
+          "ShowTitle": false
+        }
+      ]
     }
   ]
 }

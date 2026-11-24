@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<script src="sdpi-components.js"></script>
+		<style>
+			.help {
+				margin: 4px 0 0 0;
+				padding: 0;
+				font-size: 12px;
+				line-height: 1.5;
+				opacity: 0.75;
+			}
+			.help code {
+				font-family: Consolas, monospace;
+			}
+		</style>
+	</head>
+	<body>
+		<sdpi-item label="Answer">
+			<sdpi-select setting="response" default="allow">
+				<option value="allow">Allow (sends 1)</option>
+				<option value="always">Allow and don't ask again (sends 2)</option>
+				<option value="deny">Deny (sends Esc)</option>
+			</sdpi-select>
+		</sdpi-item>
+
+		<sdpi-item label="Submit">
+			<sdpi-checkbox setting="submit" label="Press Enter after the choice"></sdpi-checkbox>
+		</sdpi-item>
+
+		<sdpi-item label="Info">
+			<p class="help">
+				The key shows the tool Claude wants to use, what it wants to do, and the project it came from. It only sends keys
+				while a permission request is waiting. The keys go to the window that has focus, so check the project name when
+				more than one session is open (a <code>+N</code> badge counts the other sessions waiting).<br />
+				Leave <b>Press Enter</b> off unless you need it: if another prompt appears right after the first, an extra Enter
+				would approve it without you seeing it.
+			</p>
+		</sdpi-item>
+	</body>
+</html>
