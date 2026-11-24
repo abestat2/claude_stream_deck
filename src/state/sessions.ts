@@ -5,7 +5,7 @@ import { EventEmitter } from "node:events";
  * - `idle`: nothing is happening.
  * - `working`: processing a prompt, running tools, or running subagents.
  * - `attention`: blocked on a permission prompt, or finished a turn by asking the user a question.
- * - `done`: finished a turn without a question. Reverts to `idle` after {@link DONE_FADE_MS}.
+ * - `done`: finished a turn without a question. Stays until the next prompt is submitted.
  */
 export type SessionState = "idle" | "working" | "attention" | "done";
 
@@ -40,9 +40,6 @@ type Session = {
 
 /** A working session with no events for this long is reported as idle. */
 const WORKING_STALE_MS = 10 * 60 * 1000;
-
-/** A finished session with no further events for this long is reported as idle. */
-export const DONE_FADE_MS = 5 * 60 * 1000;
 
 /** A session with no events for this long is removed. */
 const SESSION_EXPIRY_MS = 2 * 60 * 60 * 1000;
@@ -179,7 +176,7 @@ export class SessionStore extends EventEmitter {
 
 	/**
 	 * Resolves a session's reported state. A session with running subagents counts as working,
-	 * a working session that has gone quiet counts as idle, and a finished session fades to idle.
+	 * and a working session that has gone quiet counts as idle.
 	 */
 	private effectiveState(session: Session, now: number): SessionState {
 		const quietFor = now - session.lastSeen;
@@ -189,10 +186,7 @@ export class SessionStore extends EventEmitter {
 		if (session.state === "working" || session.agents.size > 0) {
 			return quietFor > WORKING_STALE_MS ? "idle" : "working";
 		}
-		if (session.state === "done") {
-			return quietFor > DONE_FADE_MS ? "idle" : "done";
-		}
-		return "idle";
+		return session.state;
 	}
 
 	/** Emits `change` when the aggregate view differs from the last one emitted. */
