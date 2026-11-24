@@ -37,6 +37,18 @@
 			</sdpi-select>
 		</sdpi-item>
 
+		<sdpi-item label="Setup">
+			<p id="setup-status" class="help">Checking...</p>
+		</sdpi-item>
+
+		<sdpi-item>
+			<sdpi-button id="setup-install">Install hooks and status line</sdpi-button>
+		</sdpi-item>
+
+		<sdpi-item>
+			<sdpi-button id="setup-remove">Remove</sdpi-button>
+		</sdpi-item>
+
 		<sdpi-item label="Info">
 			<p class="help">
 				The character walks while Claude works and shows the turn timer. When a session needs you it hops. If it keeps
@@ -44,5 +56,30 @@
 				Claude Status keys.
 			</p>
 		</sdpi-item>
+		<script>
+			const { streamDeckClient } = SDPIComponents;
+			const statusText = document.getElementById("setup-status");
+
+			function describe(result) {
+				if (!result.ok) {
+					return "Could not check or change the Claude settings: " + result.message;
+				}
+				const hooks = result.status.hooks ? "installed" : "not installed";
+				const statusLine = { forwarder: "installed", other: "another status line is in use", none: "not installed" }[result.status.statusLine];
+				return "Hooks: " + hooks + ". Status line: " + statusLine + "." + (result.message ? " " + result.message : "");
+			}
+
+			streamDeckClient.sendToPropertyInspector.subscribe((message) => {
+				const payload = message && message.payload ? message.payload : message;
+				if (payload && payload.event === "setup-result") {
+					statusText.textContent = describe(payload);
+				}
+			});
+
+			const ask = (event) => streamDeckClient.send("sendToPlugin", { event });
+			document.getElementById("setup-install").addEventListener("click", () => ask("setup-install"));
+			document.getElementById("setup-remove").addEventListener("click", () => ask("setup-remove"));
+			ask("setup-check");
+		</script>
 	</body>
 </html>

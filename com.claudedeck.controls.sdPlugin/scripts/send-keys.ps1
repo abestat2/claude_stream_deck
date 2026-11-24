@@ -118,6 +118,50 @@ public static class KeySender
 }
 '@
 
+# When CLAUDE_DECK_DRY_RUN is "1", nothing is sent. Each action is written to standard output instead,
+# as "text <json string>" or "key <virtual key> <modifiers joined by +>", and CLAUDE_DECK_CLIPBOARD,
+# when set, replaces the clipboard contents.
+$dryRun = $env:CLAUDE_DECK_DRY_RUN -eq '1'
+
+# Largest clipboard text that is typed.
+$maxClipboardChars = 10000
+
+function Send-Text([string]$value) {
+    if ($dryRun) {
+        [Console]::Out.WriteLine('text ' + (ConvertTo-Json -InputObject $value -Compress))
+    } else {
+        [KeySender]::Text($value)
+    }
+}
+
+function Send-Key([uint16]$vk, [bool]$extended, [uint16[]]$mods) {
+    if ($dryRun) {
+        [Console]::Out.WriteLine("key $vk $($mods -join '+')")
+    } else {
+        [KeySender]::Press($vk, $extended, $mods)
+    }
+}
+
+function Get-ClipboardText {
+    if ($dryRun -and $null -ne $env:CLAUDE_DECK_CLIPBOARD) { return $env:CLAUDE_DECK_CLIPBOARD }
+    return Get-Clipboard -Raw
+}
+
+# Types the clipboard text. Line breaks inside the text are entered as Ctrl+J, which starts a new line
+# in the Claude Code prompt without submitting it. Trailing line breaks are dropped and the text is
+# cut to $maxClipboardChars characters.
+function Send-Clipboard {
+    $text = Get-ClipboardText
+    if ([string]::IsNullOrEmpty($text)) { return }
+    $text = $text.TrimEnd("`r", "`n")
+    if ($text.Length -gt $maxClipboardChars) { $text = $text.Substring(0, $maxClipboardChars) }
+    $lines = $text -split "`r?`n"
+    for ($i = 0; $i -lt $lines.Length; $i++) {
+        if ($i -gt 0) { Send-Key 74 $false ([uint16[]]@(17)) }
+        if ($lines[$i].Length -gt 0) { Send-Text $lines[$i] }
+    }
+}
+
 [Console]::Out.WriteLine('ready')
 
 while ($null -ne ($line = [Console]::In.ReadLine())) {
@@ -132,10 +176,12 @@ while ($null -ne ($line = [Console]::In.ReadLine())) {
             if (-not $first -and $delay -gt 0) { Start-Sleep -Milliseconds $delay }
             $first = $false
             if ($step.type -eq 'text') {
-                [KeySender]::Text([string]$step.value)
+                Send-Text ([string]$step.value)
             } elseif ($step.type -eq 'key') {
                 $mods = [uint16[]]@($step.modifiers | ForEach-Object { [uint16]$_ })
-                [KeySender]::Press([uint16]$step.vk, [bool]$step.extended, $mods)
+                Send-Key ([uint16]$step.vk) ([bool]$step.extended) $mods
+            } elseif ($step.type -eq 'clipboard') {
+                Send-Clipboard
             } else {
                 throw "Unknown step type '$($step.type)'"
             }

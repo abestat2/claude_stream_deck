@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-const SCRIPT = resolve(__dirname, "../../scripts/install-hooks.mjs");
+const SCRIPT = resolve(__dirname, "../../com.claudedeck.controls.sdPlugin/scripts/install-hooks.mjs");
 const URL_DEFAULT = "http://127.0.0.1:47831/event";
 const EVENT_COUNT = 14;
 

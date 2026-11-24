@@ -5,12 +5,14 @@
  * - Plain characters are typed as text.
  * - `{Name}` presses a named key, for example `{Enter}` or `{Esc}`.
  * - `{Mod+Name}` presses a key with modifiers, for example `{Shift+Tab}` or `{Ctrl+C}`.
+ * - `{Clipboard}` types the clipboard text at that point.
  * - `{{` and `}}` type a literal `{` and `}`.
  */
 
 export type Step =
 	| { type: "text"; value: string }
-	| { type: "key"; vk: number; extended: boolean; modifiers: number[] };
+	| { type: "key"; vk: number; extended: boolean; modifiers: number[] }
+	| { type: "clipboard" };
 
 type KeyDef = { vk: number; extended?: boolean };
 
@@ -72,6 +74,10 @@ function resolveKey(name: string): KeyDef | undefined {
  * @throws Error when the token names an unknown key or modifier.
  */
 function parseToken(token: string): Step {
+	if (token.trim().toLowerCase() === "clipboard") {
+		return { type: "clipboard" };
+	}
+
 	const parts = token.split("+").map((p) => p.trim());
 	const keyName = parts.pop() ?? "";
 	const key = resolveKey(keyName);

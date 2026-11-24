@@ -236,6 +236,30 @@
           "ShowTitle": false
         }
       ]
+    },
+    {
+      "Name": "Sessions",
+      "UUID": "com.claudedeck.controls.sessions",
+      "Icon": "imgs/actions/sessions/icon",
+      "Tooltip": "Turn to move through open Claude Code sessions: project, state with timer, and what each is doing or waiting for.",
+      "Controllers": [
+        "Encoder"
+      ],
+      "Encoder": {
+        "layout": "layouts/canvas.json",
+        "Icon": "imgs/actions/sessions/encoder",
+        "TriggerDescription": {
+          "Rotate": "Choose session",
+          "Push": "",
+          "Touch": "",
+          "LongTouch": ""
+        }
+      },
+      "States": [
+        {
+          "Image": "imgs/actions/sessions/key"
+        }
+      ]
     }
   ]
 }

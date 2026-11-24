@@ -10,9 +10,11 @@ import { PermissionMode } from "./actions/permission-mode";
 import { PermissionResponse } from "./actions/permission";
 import { SavedPrompts } from "./actions/saved-prompts";
 import { SendText } from "./actions/send-text";
+import { Sessions } from "./actions/sessions";
 import { SessionOverview } from "./actions/session-overview";
 import { keyboard } from "./input/keyboard";
 import { startHookServer } from "./server/hook-server";
+import { runSetup } from "./setup/installer";
 import { SessionStore } from "./state/sessions";
 import { Usage } from "./actions/usage";
 import { UsageService } from "./usage/client";
@@ -64,6 +66,20 @@ streamDeck.actions.registerAction(new Connection(store, usage));
 streamDeck.actions.registerAction(new PermissionResponse(store));
 streamDeck.actions.registerAction(new PermissionMode(store));
 streamDeck.actions.registerAction(new Context(store));
+streamDeck.actions.registerAction(new Sessions(store));
+
+streamDeck.ui.onSendToPlugin(async (ev) => {
+	const request = (ev.payload as { event?: unknown } | null)?.event;
+	const action = request === "setup-install" ? "install" : request === "setup-remove" ? "remove" : request === "setup-check" ? "check" : undefined;
+	if (!action) {
+		return;
+	}
+	const result = await runSetup(action);
+	if (!result.ok) {
+		streamDeck.logger.error(`Setup ${action} failed: ${result.message}`);
+	}
+	await streamDeck.ui.sendToPropertyInspector({ event: "setup-result", ...result });
+});
 
 const hookServer = startHookServer(store, streamDeck.logger);
 
