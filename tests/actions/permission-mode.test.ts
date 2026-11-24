@@ -117,7 +117,7 @@ describe("PermissionMode", () => {
 		handler.onWillAppear({ action: k } as never);
 		vi.advanceTimersByTime(10);
 		await press();
-		expect(texts()).toEqual(["MODE", "Plan", "updates next msg"]);
+		expect(texts()).toEqual(["MODE", "Default", "predicted"]);
 	});
 
 	it("marks the display stale when no hook event has ever arrived", async () => {
@@ -132,7 +132,7 @@ describe("PermissionMode", () => {
 		await press();
 		vi.advanceTimersByTime(10);
 		store.handleStatus({ session_id: "a", model: { id: "m", display_name: "Opus" } });
-		expect(texts()).toContain("updates next msg");
+		expect(texts()).toContain("predicted");
 	});
 
 	it("clears the stale mark when a newer hook event arrives", async () => {
@@ -168,5 +168,71 @@ describe("PermissionMode", () => {
 		hoisted.instances.push(dial);
 		handler.onWillAppear({ action: dial } as never);
 		expect(dial.setImage).not.toHaveBeenCalled();
+	});
+	describe("predicted mode", () => {
+		const appear = (): void => {
+			handler.onWillAppear({ action: k } as never);
+			vi.advanceTimersByTime(10);
+		};
+
+		it("shows the next mode in the cycle, marked as predicted, after a press", async () => {
+			event("a", "default");
+			appear();
+			await press();
+			expect(texts()).toEqual(["MODE", "Accept", "edits", "predicted"]);
+		});
+
+		it("continues from the predicted mode when pressed again before an event arrives", async () => {
+			event("a", "default");
+			appear();
+			await press();
+			await press();
+			expect(texts()).toEqual(["MODE", "Plan", "predicted"]);
+			await press();
+			expect(texts()).toEqual(["MODE", "Default", "predicted"]);
+		});
+
+		it("predicts auto after plan once a session has reported auto", async () => {
+			event("b", "auto");
+			vi.advanceTimersByTime(10);
+			event("a", "plan");
+			appear();
+			await press();
+			expect(texts()).toEqual(["MODE", "Auto", "predicted"]);
+		});
+
+		it("replaces the prediction with the reported mode when a hook event arrives", async () => {
+			event("a", "default");
+			appear();
+			await press();
+			vi.advanceTimersByTime(10);
+			event("a", "plan");
+			expect(texts()).toEqual(["MODE", "Plan", "demo"]);
+		});
+
+		it("restarts from the reported mode after an event confirms it", async () => {
+			event("a", "default");
+			appear();
+			await press();
+			vi.advanceTimersByTime(10);
+			event("a", "acceptEdits");
+			vi.advanceTimersByTime(10);
+			await press();
+			expect(texts()).toEqual(["MODE", "Plan", "predicted"]);
+		});
+
+		it("shows no prediction when no mode has been reported", async () => {
+			await press();
+			expect(texts()).toContain("updates next msg");
+			expect(texts()).not.toContain("predicted");
+		});
+
+		it("makes no prediction when the key press fails", async () => {
+			event("a", "default");
+			appear();
+			hoisted.send.mockRejectedValueOnce(new Error("blocked"));
+			await press();
+			expect(texts()).toEqual(["MODE", "Default", "demo"]);
+		});
 	});
 });

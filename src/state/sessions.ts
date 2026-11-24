@@ -174,6 +174,7 @@ export function describeTool(input: unknown): string {
  */
 export class SessionStore extends EventEmitter {
 	private readonly tracked = new Map<string, Session>();
+	private readonly modesSeen = new Set<string>();
 	private lastKey = "";
 	private lastDetailKey = "";
 	private lastEventAt: number | undefined;
@@ -218,6 +219,7 @@ export class SessionStore extends EventEmitter {
 		}
 		if (typeof event.permission_mode === "string" && event.permission_mode.length > 0) {
 			session.permissionMode = event.permission_mode;
+			this.modesSeen.add(event.permission_mode);
 		}
 
 		switch (name) {
@@ -414,6 +416,11 @@ export class SessionStore extends EventEmitter {
 	 */
 	latestContext(): SessionInfo | undefined {
 		return this.sessions().find((session) => session.contextPercent !== undefined);
+	}
+
+	/** Returns the permission modes that sessions have reported since the plugin started. */
+	seenModes(): ReadonlySet<string> {
+		return this.modesSeen;
 	}
 
 	/** Returns the epoch milliseconds of the most recent status line update, or undefined when none has arrived. */

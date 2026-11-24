@@ -31,8 +31,9 @@ function lines(name: string): string[] {
  * @param mode Permission mode reported by the most recently active session.
  * @param project Project of that session.
  * @param stale True after the key was pressed and before a newer event confirms the mode.
+ * @param predicted True when `mode` is the expected result of cycling, not a reported mode.
  */
-export function renderMode(mode: string | undefined, project: string, stale: boolean): string {
+export function renderMode(mode: string | undefined, project: string, stale: boolean, predicted = false): string {
 	const style = modeStyle(mode);
 	const nameLines = lines(style.name);
 	const size = nameLines.some((line) => line.length > 9) ? 22 : 28;
@@ -49,7 +50,7 @@ export function renderMode(mode: string | undefined, project: string, stale: boo
 		);
 	});
 
-	const caption = stale ? "updates next msg" : project;
+	const caption = stale ? (predicted ? "predicted" : "updates next msg") : project;
 	if (caption) {
 		parts.push(
 			`<text x="72" y="132" text-anchor="middle" font-family="Arial, sans-serif" font-size="${stale ? 11 : 13}" font-weight="700" fill="${stale ? ACCENT : LABEL}">${escapeXml(clipText(caption, stale ? 24 : 18))}</text>`,
