@@ -1,0 +1,8 @@
+# Text files use Unix line endings on every platform.
+* text=auto eol=lf
+
+# Binary files are stored as they are.
+*.gif binary
+*.png binary
+*.streamDeckProfile binary
+*.streamDeckPlugin binary
