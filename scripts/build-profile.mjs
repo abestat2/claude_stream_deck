@@ -58,36 +58,25 @@ function action(position, kind, name, settings = {}, title = undefined) {
 
 // Keys are placed by "column,row" on the 4 x 2 grid.
 const KEYS = {
-  "0,0": action("k00", "claude-status", "Claude Status"),
-  "1,0": action("k10", "permission", "Permission Response", { response: "allow" }),
-  "2,0": action("k20", "permission", "Permission Response", { response: "deny" }),
-  "3,0": action("k30", "send-text", "Send Text", { text: "{Esc}", submit: false }, "Esc"),
-  "0,1": action("k01", "send-text", "Send Text", { text: "yes", submit: true }, "yes"),
-  "1,1": action("k11", "send-text", "Send Text", { text: "please commit", submit: true }, "commit"),
+  "0,0": action("k00", "usage", "Usage", { first: "session", second: "week" }),
+  "1,0": action("k10", "context", "Context", { compact: true }),
+  "2,0": action("k20", "permission-mode", "Permission Mode"),
+  "3,0": action("k30", "connection", "Connection"),
+  "0,1": action("k01", "permission", "Permission Response", { response: "allow" }),
+  "1,1": action("k11", "send-text", "Send Text", { text: "yes", submit: true }, "yes"),
   "2,1": action("k21", "send-text", "Send Text", { text: "/graphify", submit: true }, "/graphify"),
-  "3,1": action("k31", "context", "Context", { compact: true }),
+  "3,1": action("k31", "claude-status", "Claude Status"),
 };
 
 // Dials are placed by "column,0".
 const DIALS = {
   "0,0": action("d0", "session-overview", "Session Overview"),
-  "1,0": action("d1", "usage", "Usage", { first: "session", second: "week" }),
-  "2,0": action("d2", "model-picker", "Model Picker", { models: "opus\nsonnet\nhaiku" }),
-  "3,0": action(
-    "d3",
-    "saved-prompts",
-    "Saved Prompts",
-    {
-      prompts: [
-        "continue",
-        "tests | run the tests and fix any failures",
-        "review | review the changes so far",
-        "explain | explain what you just did",
-        "summary | summarize where we are",
-      ].join("\n"),
-      submit: true,
-    },
-  ),
+  "1,0": action("d1", "saved-prompts", "Saved Prompts", {
+    prompts: ["Yes", "1", "commit", "{Clipboard}", "/graphify", "/exit"].join("\n"),
+    submit: true,
+  }),
+  "2,0": action("d2", "usage", "Usage", { first: "session", second: "week" }),
+  "3,0": action("d3", "model-picker", "Model Picker", { models: "opus\nsonnet\nhaiku" }),
 };
 
 const profileId = uuid("profile").toUpperCase();
