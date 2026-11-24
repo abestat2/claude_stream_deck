@@ -30,7 +30,9 @@
       "Icon": "imgs/actions/send-text/icon",
       "Tooltip": "Types configured text and keys into the focused window.",
       "PropertyInspectorPath": "ui/send-text.html",
-      "Controllers": ["Keypad"],
+      "Controllers": [
+        "Keypad"
+      ],
       "States": [
         {
           "Image": "imgs/actions/send-text/key",
@@ -44,7 +46,9 @@
       "UUID": "com.claudedeck.controls.claude-status",
       "Icon": "imgs/actions/claude-status/icon",
       "Tooltip": "Animated character that shows whether Claude Code sessions are idle, working, or need attention.",
-      "Controllers": ["Keypad"],
+      "Controllers": [
+        "Keypad"
+      ],
       "UserTitleEnabled": false,
       "States": [
         {
@@ -58,7 +62,9 @@
       "UUID": "com.claudedeck.controls.session-overview",
       "Icon": "imgs/actions/session-overview/icon",
       "Tooltip": "Shows the number of Claude Code sessions, running agents, and sessions waiting for input.",
-      "Controllers": ["Encoder"],
+      "Controllers": [
+        "Encoder"
+      ],
       "Encoder": {
         "layout": "layouts/canvas.json",
         "Icon": "imgs/actions/session-overview/encoder",
@@ -72,6 +78,31 @@
       "States": [
         {
           "Image": "imgs/actions/session-overview/key"
+        }
+      ]
+    },
+    {
+      "Name": "Model Picker",
+      "UUID": "com.claudedeck.controls.model-picker",
+      "Icon": "imgs/actions/model-picker/icon",
+      "Tooltip": "Turn to choose a model, press to send /model to the focused window.",
+      "PropertyInspectorPath": "ui/model-picker.html",
+      "Controllers": [
+        "Encoder"
+      ],
+      "Encoder": {
+        "layout": "layouts/canvas.json",
+        "Icon": "imgs/actions/model-picker/encoder",
+        "TriggerDescription": {
+          "Rotate": "Choose model",
+          "Push": "Send /model",
+          "Touch": "Send /model",
+          "LongTouch": ""
+        }
+      },
+      "States": [
+        {
+          "Image": "imgs/actions/model-picker/key"
         }
       ]
     }

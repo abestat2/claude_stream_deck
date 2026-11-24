@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<script src="sdpi-components.js"></script>
+		<style>
+			.help {
+				margin: 4px 0 0 0;
+				padding: 0;
+				font-size: 12px;
+				line-height: 1.5;
+				opacity: 0.75;
+			}
+			.help code {
+				font-family: Consolas, monospace;
+			}
+		</style>
+	</head>
+	<body>
+		<sdpi-item label="Models">
+			<sdpi-textarea setting="models" placeholder="opus&#10;sonnet&#10;haiku" rows="6"></sdpi-textarea>
+		</sdpi-item>
+
+		<sdpi-item label="Usage">
+			<p class="help">
+				One model per line, in the order the dial scrolls through them. Each name is sent as
+				<code>/model name</code>. Leave empty for <code>opus</code>, <code>sonnet</code>, <code>haiku</code>.<br />
+				Turn the dial to choose, then press the dial or tap the strip to send.
+			</p>
+		</sdpi-item>
+	</body>
+</html>
