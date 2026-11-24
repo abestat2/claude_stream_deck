@@ -1,4 +1,5 @@
 import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
+import type { Socket } from "node:net";
 import { createInterface } from "node:readline";
 import { fileURLToPath } from "node:url";
 import type { Step } from "./sequence";
@@ -70,6 +71,12 @@ class Keyboard {
 				{ windowsHide: true },
 			);
 			this.proc = proc;
+
+			// The helper must not keep the process alive, so the plugin exits when Stream Deck disconnects.
+			proc.unref();
+			for (const stream of [proc.stdin, proc.stdout, proc.stderr]) {
+				(stream as unknown as Socket).unref?.();
+			}
 
 			let started = false;
 			let stderr = "";

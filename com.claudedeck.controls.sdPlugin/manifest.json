@@ -38,6 +38,42 @@
           "FontSize": 14
         }
       ]
+    },
+    {
+      "Name": "Claude Status",
+      "UUID": "com.claudedeck.controls.claude-status",
+      "Icon": "imgs/actions/claude-status/icon",
+      "Tooltip": "Animated character that shows whether Claude Code sessions are idle, working, or need attention.",
+      "Controllers": ["Keypad"],
+      "UserTitleEnabled": false,
+      "States": [
+        {
+          "Image": "imgs/actions/claude-status/key",
+          "ShowTitle": false
+        }
+      ]
+    },
+    {
+      "Name": "Session Overview",
+      "UUID": "com.claudedeck.controls.session-overview",
+      "Icon": "imgs/actions/session-overview/icon",
+      "Tooltip": "Shows the number of Claude Code sessions, running agents, and sessions waiting for input.",
+      "Controllers": ["Encoder"],
+      "Encoder": {
+        "layout": "layouts/canvas.json",
+        "Icon": "imgs/actions/session-overview/encoder",
+        "TriggerDescription": {
+          "Rotate": "",
+          "Push": "",
+          "Touch": "",
+          "LongTouch": ""
+        }
+      },
+      "States": [
+        {
+          "Image": "imgs/actions/session-overview/key"
+        }
+      ]
     }
   ]
 }
