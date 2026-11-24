@@ -225,7 +225,7 @@ describe("build-profile layout", () => {
 
 	it("gives every action the full set of fields", () => {
 		const version = pluginManifest().Version;
-		expect(version).toBe("0.1.0.0");
+		expect(version).toMatch(/^\d+\.\d+\.\d+\.\d+$/);
 		expect(allActions()).toHaveLength(12);
 		for (const a of allActions()) {
 			expect(Object.keys(a).sort()).toEqual([

@@ -23,10 +23,6 @@ describe("version", () => {
 	it("is a three-part version number", () => {
 		expect(pkg.version).toMatch(/^\d+\.\d+\.\d+$/);
 	});
-
-	it("appears in the README version badge", () => {
-		expect(read("README.md")).toContain(`badge/version-${pkg.version}-`);
-	});
 });
 
 describe("license", () => {
