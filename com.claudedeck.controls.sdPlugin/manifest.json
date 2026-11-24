@@ -110,7 +110,7 @@
       "Name": "Usage",
       "UUID": "com.claudedeck.controls.usage",
       "Icon": "imgs/actions/usage/icon",
-      "Tooltip": "Shows plan usage and time until reset for the 5-hour, weekly, or Sonnet weekly window.",
+      "Tooltip": "Shows plan usage and time until reset as two bars, chosen from the 5-hour, weekly, and Sonnet weekly windows.",
       "PropertyInspectorPath": "ui/usage.html",
       "Controllers": [
         "Keypad",

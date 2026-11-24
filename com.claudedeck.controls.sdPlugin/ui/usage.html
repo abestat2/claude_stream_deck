@@ -14,8 +14,16 @@
 		</style>
 	</head>
 	<body>
-		<sdpi-item label="Window">
-			<sdpi-select setting="window" default="session">
+		<sdpi-item label="Top bar">
+			<sdpi-select setting="first" default="session">
+				<option value="session">5-hour session</option>
+				<option value="week">Weekly (all models)</option>
+				<option value="sonnet">Weekly (Sonnet)</option>
+			</sdpi-select>
+		</sdpi-item>
+
+		<sdpi-item label="Bottom bar">
+			<sdpi-select setting="second" default="week">
 				<option value="session">5-hour session</option>
 				<option value="week">Weekly (all models)</option>
 				<option value="sonnet">Weekly (Sonnet)</option>
@@ -24,8 +32,9 @@
 
 		<sdpi-item label="Info">
 			<p class="help">
-				Shows the percentage of your plan limit used and the time until it resets. Press the key or dial to refresh.
-				Readings come from your Claude Code login and update about once a minute.
+				Each bar shows the percentage of your plan limit used and the time until it resets. If both bars are set to the
+				same window, the bottom bar shows the next one. Press the key or dial to refresh. Readings come from your Claude
+				Code login and update about once a minute.
 			</p>
 		</sdpi-item>
 	</body>
