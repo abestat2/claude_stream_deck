@@ -102,15 +102,16 @@ export class Usage extends SingletonAction<Settings> {
 
 	private draw(): void {
 		const state = this.service.state();
+		const pace = this.service.pace();
 		for (const instance of this.actions) {
 			const pair = this.windows.get(instance.id);
 			if (!pair) {
 				continue;
 			}
 			if (instance.isKey()) {
-				void instance.setImage(svgDataUri(renderUsageKey(pair, state)));
+				void instance.setImage(svgDataUri(renderUsageKey(pair, state, pace)));
 			} else if (instance.isDial()) {
-				void instance.setFeedback({ canvas: svgDataUri(renderUsageDial(pair, state)) });
+				void instance.setFeedback({ canvas: svgDataUri(renderUsageDial(pair, state, pace)) });
 			}
 		}
 	}

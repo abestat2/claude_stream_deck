@@ -44,8 +44,12 @@ type Settings = { first?: string; second?: string };
 class FakeService extends EventEmitter {
 	current: UsageState = { windows: {}, fetchedAt: undefined, error: undefined };
 	refresh = vi.fn().mockResolvedValue(undefined);
+	paceByWindow: Record<string, unknown> = {};
 	state(): UsageState {
 		return this.current;
+	}
+	pace(): Record<string, unknown> {
+		return this.paceByWindow;
 	}
 }
 
@@ -330,7 +334,7 @@ describe("Usage", () => {
 			appear(k);
 			appear(d);
 			expect(keyTexts()).toEqual(["5-HOUR", "offline", "37%", "WEEK", "offline", "81%"]);
-			expect(dialSvg()).toContain(">offline</tspan>");
+			expect(dialSvg()).toContain(">offline</text>");
 			expect(dialSvg()).toContain(">37%</text>");
 		});
 

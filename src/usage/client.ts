@@ -2,6 +2,7 @@ import { EventEmitter } from "node:events";
 import { readFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join } from "node:path";
+import { computePace, LOOKBACK_MS, type Pace, type Sample } from "./pace";
 
 /** Plan usage windows that can be displayed. */
 export type WindowId = "session" | "week" | "sonnet";
@@ -40,6 +41,20 @@ const MIN_MANUAL_INTERVAL_MS = 10_000;
 const DEFAULT_RATE_LIMIT_WAIT_MS = 120_000;
 
 const REQUEST_TIMEOUT_MS = 8_000;
+
+/** Shortest time between stored readings used to measure pace. */
+const SAMPLE_INTERVAL_MS = 60_000;
+
+/** How long stored readings are kept. */
+const SAMPLE_RETENTION_MS = 24 * 60 * 60_000;
+
+/** A drop of at least this many percentage points between readings means the window was reset. */
+const RESET_DROP_PERCENT = 0.5;
+
+/** A reset time that moves forward by more than this between readings means the window was reset. */
+const RESET_TIME_JUMP_MS = 30 * 60_000;
+
+const WINDOW_IDS: WindowId[] = ["session", "week", "sonnet"];
 
 /** Age of the service's own reading after which status line limits may replace it. */
 const STATUS_LINE_FALLBACK_AFTER_MS = 5 * 60_000;
@@ -113,10 +128,29 @@ export class UsageService extends EventEmitter {
 	private lastOwnReading: number | undefined;
 	private waitUntil = 0;
 	private inFlight = false;
+	private readonly history: Record<WindowId, Sample[]> = { session: [], week: [], sonnet: [] };
+	private readonly lastResetsAt: Partial<Record<WindowId, number>> = {};
 
 	/** Returns the latest result. */
 	state(): UsageState {
 		return this.current;
+	}
+
+	/**
+	 * Returns how fast each window is being used, measured from readings stored since the plugin started.
+	 * A window has no entry until enough history exists, while its use is not increasing, and when it
+	 * has no reading.
+	 * @param now Epoch milliseconds to measure from.
+	 */
+	pace(now = Date.now()): Partial<Record<WindowId, Pace>> {
+		const result: Partial<Record<WindowId, Pace>> = {};
+		for (const id of WINDOW_IDS) {
+			const pace = computePace(this.history[id], now, this.current.windows[id]?.resetsAt, LOOKBACK_MS[id]);
+			if (pace) {
+				result[id] = pace;
+			}
+		}
+		return result;
 	}
 
 	/**
@@ -211,7 +245,46 @@ export class UsageService extends EventEmitter {
 		}
 	}
 
+	/** Stores one reading per window, at most one per minute, and drops the history of a window that was reset. */
+	private record(windows: UsageState["windows"], now: number): void {
+		for (const id of WINDOW_IDS) {
+			const window = windows[id];
+			const list = this.history[id];
+			if (!window) {
+				list.length = 0;
+				delete this.lastResetsAt[id];
+				continue;
+			}
+
+			const last = list[list.length - 1];
+			const resetsAt = window.resetsAt?.getTime();
+			const previousReset = this.lastResetsAt[id];
+			const reset =
+				last !== undefined &&
+				(window.percent <= last.percent - RESET_DROP_PERCENT ||
+					(resetsAt !== undefined && previousReset !== undefined && resetsAt - previousReset > RESET_TIME_JUMP_MS));
+			if (reset) {
+				list.length = 0;
+			}
+			if (resetsAt !== undefined) {
+				this.lastResetsAt[id] = resetsAt;
+			}
+
+			const newest = list[list.length - 1];
+			if (!newest || now - newest.at >= SAMPLE_INTERVAL_MS) {
+				list.push({ at: now, percent: window.percent });
+			}
+			while (list[0] && now - list[0].at > SAMPLE_RETENTION_MS) {
+				list.shift();
+			}
+		}
+	}
+
 	private update(result: Pick<UsageState, "error"> & { windows?: UsageState["windows"] }): void {
+		if (result.windows) {
+			this.record(result.windows, Date.now());
+		}
+
 		const next: UsageState = result.windows
 			? { windows: result.windows, fetchedAt: Date.now(), error: undefined }
 			: { ...this.current, error: result.error };

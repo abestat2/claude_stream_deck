@@ -7,6 +7,7 @@
 <p align="center"><b>Status and controls for Claude Code on a Stream Deck +</b></p>
 
 <p align="center">
+  <a href="https://github.com/abestat2/claude_stream_deck/actions/workflows/ci.yml"><img alt="CI status" src="https://github.com/abestat2/claude_stream_deck/actions/workflows/ci.yml/badge.svg"></a>
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue"></a>
   <img alt="Platform: Windows" src="https://img.shields.io/badge/platform-Windows-0078D6">
   <img alt="Stream Deck 7.1 or later" src="https://img.shields.io/badge/Stream%20Deck-7.1%2B-5b5b5b">
@@ -32,7 +33,13 @@ This is an independent project. It is not made or endorsed by Anthropic or Elgat
 - Node.js 24 or later to build the plugin (the Stream Deck app runs the built plugin with its own Node.js)
 - Claude Code
 
+## Install
+
+Download `com.claudedeck.controls.streamDeckPlugin` from the [latest release](https://github.com/abestat2/claude_stream_deck/releases/latest) and open it. The Stream Deck app installs the plugin. Then continue at step 3 of the setup below to connect Claude Code.
+
 ## Setup
+
+To build the plugin from source, start at step 1. To use a release, start at step 3.
 
 1. Install and build:
 
@@ -69,7 +76,7 @@ Every button appears in the **Claude Deck** category of the Stream Deck app.
 | **Claude Status** | key | An animated character: still when idle, walking with a turn timer while working, hopping when a session needs you, and a green check when a turn finished without a question. |
 | **Session Overview** | dial | Counts of sessions, running subagents, and sessions waiting on you. |
 | **Sessions** | dial | Turn to move through open sessions. Shows each one's project, state with timer, and the tool it is using or what it waits for. |
-| **Usage** | key or dial | Two bars for plan usage with time until reset. Each bar is the 5-hour, weekly, or Sonnet weekly window. Press to refresh. |
+| **Usage** | key or dial | Two bars for plan usage with time until reset. Each bar is the 5-hour, weekly, or Sonnet weekly window. When the limit will be reached before the window resets at the current pace, the time until the limit shows in red; otherwise a white tick marks the level expected at reset. Press to refresh. |
 | **Context** | key or dial | How full the context window is, with the model and token counts. Press to send `/compact`, which is refused while any session is working or waiting. |
 | **Permission Response** | key | Shows the pending permission request (tool, what it wants to do, project) and answers it. Each key is set to allow (sends `1`), allow and do not ask again (sends `2`), or deny (sends `Esc`). |
 | **Permission Mode** | key | Shows the current permission mode and cycles it with `Shift+Tab`. |
@@ -151,6 +158,7 @@ The plugin's network traffic is the local receiver and, for the Usage button, th
 - The permission mode is reported by Claude Code only with hook events. After pressing Permission Mode, the key shows the mode that cycling should lead to, marked "predicted", and replaces it when the next event arrives. It does not notice a mode changed with the keyboard until then.
 - Context, model, and plan limits come from the status line, which Claude Code runs after its first response in a session.
 - The usage endpoint can change without notice.
+- Pace is measured from usage readings taken since the plugin started, over the last 30 minutes for the 5-hour window and the last 12 hours for the weekly windows. It appears after at least 5 minutes of rising use and assumes use continues at the same rate until the window resets.
 - The mode prediction treats bypass and auto mode as enabled once a session has reported them.
 
 ## Development
@@ -165,6 +173,8 @@ The plugin's network traffic is the local receiver and, for the Usage button, th
 | `npm run hooks:install` / `hooks:remove` | Add or remove the hooks |
 | `npm run statusline:install` | Add the hooks and the status line command |
 | `npm run profile:build` | Regenerate the preset profile |
+| `npm run validate` | Validate the plugin with the Elgato CLI |
+| `npm run package` | Build, validate, and write the installable `.streamDeckPlugin` file to `dist/` |
 
 Changes to `manifest.json`, such as a new button, need the Stream Deck app to be restarted.
 
