@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<script src="sdpi-components.js"></script>
+		<style>
+			.help {
+				margin: 4px 0 0 0;
+				padding: 0;
+				font-size: 12px;
+				line-height: 1.5;
+				opacity: 0.75;
+			}
+		</style>
+	</head>
+	<body>
+		<sdpi-item label="Window">
+			<sdpi-select setting="window" default="session">
+				<option value="session">5-hour session</option>
+				<option value="week">Weekly (all models)</option>
+				<option value="sonnet">Weekly (Sonnet)</option>
+			</sdpi-select>
+		</sdpi-item>
+
+		<sdpi-item label="Info">
+			<p class="help">
+				Shows the percentage of your plan limit used and the time until it resets. Press the key or dial to refresh.
+				Readings come from your Claude Code login and update about once a minute.
+			</p>
+		</sdpi-item>
+	</body>
+</html>
