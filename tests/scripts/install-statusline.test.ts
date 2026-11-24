@@ -43,12 +43,12 @@ describe("install-hooks --statusline", () => {
 		expect(result.stdout).toContain("Installed the status line forwarder.");
 		const { statusLine } = read();
 		expect(statusLine.type).toBe("command");
-		expect(statusLine.command).toMatch(/^node ".*statusline-forward\.mjs"$/);
+		expect(statusLine.command).toMatch(/^\S+ ".*statusline-forward\.mjs"$/);
 	});
 
 	it("writes a command that points at the forwarder next to the installer", () => {
 		run("--statusline");
-		const path = /^node "(.*)"$/.exec(read().statusLine.command)?.[1] as string;
+		const path = /^\S+ "(.*)"$/.exec(read().statusLine.command)?.[1] as string;
 		expect(path).not.toContain("\\");
 		expect(basename(path)).toBe("statusline-forward.mjs");
 		expect(resolve(path)).toBe(FORWARDER);

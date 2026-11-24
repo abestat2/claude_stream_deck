@@ -87,7 +87,11 @@ describe.each([
 	});
 
 	it("shows set up guidance when the status line is not set up", () => {
-		expect(textElements(render(undefined, "not-set-up"))).toEqual(["CONTEXT", "no data", "set up status line"]);
+		expect(textElements(render(undefined, "not-set-up"))).toEqual(
+			render === renderContextKey
+				? ["CONTEXT", "no data", "restart Claude", "or run Setup"]
+				: ["CONTEXT", "no data", "restart Claude or Setup"],
+		);
 	});
 
 	it("shows a no messages notice when no reading has arrived yet", () => {

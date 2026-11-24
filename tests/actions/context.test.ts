@@ -207,8 +207,8 @@ describe("Context", () => {
 
 		it("shows set up guidance before any status line update", () => {
 			handler.onWillAppear({ action: k } as never);
-			expect(keyTexts()).toEqual(["CONTEXT", "no data", "set up status line"]);
-			expect(dialTexts()).toEqual(["CONTEXT", "no data", "set up status line"]);
+			expect(keyTexts()).toEqual(["CONTEXT", "no data", "restart Claude", "or run Setup"]);
+			expect(dialTexts()).toEqual(["CONTEXT", "no data", "restart Claude or Setup"]);
 		});
 
 		it("shows a no messages notice after a status update without a context reading", () => {

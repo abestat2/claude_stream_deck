@@ -12,6 +12,7 @@
 // Entries are identified by their URL or command, so running the script repeatedly is safe and
 // all other settings, hooks, and status lines in the file are left unchanged.
 
+import { execFileSync } from "node:child_process";
 import { copyFileSync, existsSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
@@ -48,6 +49,37 @@ const url = `http://127.0.0.1:${port}/event`;
 const settings = existsSync(file) ? JSON.parse(readFileSync(file, "utf8")) : {};
 const hooks = settings.hooks ?? {};
 
+// Returns the command that starts Node.js for the status line. It is an absolute path without spaces, so it
+// resolves in any shell and does not depend on PATH, which a long-running Claude Code session may not have
+// updated. It is the Node.js found on PATH when there is one, otherwise the one running this script, and on
+// Windows a path containing spaces is replaced by its short form. When no space-free path is available it
+// falls back to `node`.
+function nodeCommand() {
+  let exe = process.execPath;
+  try {
+    const found = execFileSync(process.platform === "win32" ? "where" : "which", ["node"], { encoding: "utf8" }).split(/\r?\n/)[0]?.trim();
+    if (found) {
+      exe = found;
+    }
+  } catch {
+    // Use the running Node.js.
+  }
+
+  if (process.platform === "win32" && /\s/.test(exe)) {
+    try {
+      const short = execFileSync("cmd.exe", [`/d /s /c "for %I in ("${exe}") do @echo %~sI"`], { encoding: "utf8", windowsVerbatimArguments: true }).trim();
+      if (short) {
+        exe = short;
+      }
+    } catch {
+      // Keep the long path; the check below falls back to `node`.
+    }
+  }
+
+  exe = exe.replace(/\\/g, "/");
+  return /\s/.test(exe) ? "node" : exe;
+}
+
 const isOurs = (hook) => hook?.type === "http" && hook.url === url;
 const isForwarder = (value) => value?.type === "command" && typeof value.command === "string" && value.command.includes("statusline-forward.mjs");
 
@@ -83,7 +115,7 @@ if (Object.keys(hooks).length > 0) {
 // It is set only when no status line exists or the existing one is already the forwarder,
 // unless --force-statusline is given.
 const forwarder = fileURLToPath(new URL("./statusline-forward.mjs", import.meta.url)).replace(/\\/g, "/");
-const statusLine = { type: "command", command: `node "${forwarder}"` };
+const statusLine = { type: "command", command: `${nodeCommand()} "${forwarder}"` };
 
 if (remove) {
   if (isForwarder(settings.statusLine)) {

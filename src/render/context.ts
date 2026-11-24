@@ -50,8 +50,12 @@ function wrap(width: number, height: number, parts: string[]): string {
 	return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><rect width="${width}" height="${height}" fill="${BACKGROUND}"/>${parts.join("")}</svg>`;
 }
 
-function missingLines(reason: ContextMissing): string[] {
-	return reason === "not-set-up" ? ["no data", "set up status line"] : ["no messages", "yet"];
+/** Message lines for a missing reading. The key has room for three lines and the strip for two. */
+function missingLines(reason: ContextMissing, layout: "key" | "strip"): string[] {
+	if (reason === "not-set-up") {
+		return layout === "key" ? ["no data", "restart Claude", "or run Setup"] : ["no data", "restart Claude or Setup"];
+	}
+	return ["no messages", "yet"];
 }
 
 /** Renders context window use as an SVG for a 144 x 144 key. */
@@ -59,7 +63,7 @@ export function renderContextKey(info: ContextInfo | undefined, reason: ContextM
 	const parts = [text(12, 28, 16, LABEL, "CONTEXT")];
 
 	if (!info) {
-		missingLines(reason).forEach((line, i) => parts.push(text(72, 76 + i * 22, i === 0 ? 18 : 14, i === 0 ? ACCENT : LABEL, line, "middle")));
+		missingLines(reason, "key").forEach((line, i) => parts.push(text(72, 72 + i * 22, i === 0 ? 18 : 14, i === 0 ? ACCENT : LABEL, line, "middle")));
 		return wrap(144, 144, parts);
 	}
 
@@ -80,7 +84,7 @@ export function renderContextDial(info: ContextInfo | undefined, reason: Context
 	const parts = [text(12, 24, 14, LABEL, "CONTEXT")];
 
 	if (!info) {
-		missingLines(reason).forEach((line, i) => parts.push(text(100, 58 + i * 22, i === 0 ? 18 : 14, i === 0 ? ACCENT : LABEL, line, "middle")));
+		missingLines(reason, "strip").forEach((line, i) => parts.push(text(100, 58 + i * 22, i === 0 ? 18 : 14, i === 0 ? ACCENT : LABEL, line, "middle")));
 		return wrap(200, 100, parts);
 	}
 
