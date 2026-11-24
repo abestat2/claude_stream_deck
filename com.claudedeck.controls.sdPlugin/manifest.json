@@ -55,7 +55,8 @@
           "Image": "imgs/actions/claude-status/key",
           "ShowTitle": false
         }
-      ]
+      ],
+      "PropertyInspectorPath": "ui/claude-status.html"
     },
     {
       "Name": "Session Overview",
@@ -156,6 +157,22 @@
       "States": [
         {
           "Image": "imgs/actions/saved-prompts/key"
+        }
+      ]
+    },
+    {
+      "Name": "Connection",
+      "UUID": "com.claudedeck.controls.connection",
+      "Icon": "imgs/actions/connection/icon",
+      "Tooltip": "Shows whether Claude Code events are arriving, the number of sessions, and whether usage can be read.",
+      "Controllers": [
+        "Keypad"
+      ],
+      "UserTitleEnabled": false,
+      "States": [
+        {
+          "Image": "imgs/actions/connection/key",
+          "ShowTitle": false
         }
       ]
     }

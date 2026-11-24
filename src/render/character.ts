@@ -21,6 +21,25 @@ function cell(x: number, y: number, w: number, h: number, fill: string): string 
 	return `<rect x="${x * CELL}" y="${y * CELL}" width="${w * CELL}" height="${h * CELL}" fill="${fill}"/>`;
 }
 
+/** Time-based details shown on the character. */
+export type CharacterExtra = {
+	/** Milliseconds the longest-running turn has been in progress. */
+	turnMs?: number;
+	/** Milliseconds the longest-waiting session has been waiting on the user. */
+	waitMs?: number;
+	/** True when a session has waited past the escalation interval. */
+	escalated?: boolean;
+};
+
+/** Formats a duration as `m:ss`, or `h:mm:ss` from one hour. */
+export function formatClock(ms: number): string {
+	const total = Math.max(0, Math.floor(ms / 1000));
+	const seconds = String(total % 60).padStart(2, "0");
+	const minutes = Math.floor(total / 60) % 60;
+	const hours = Math.floor(total / 3600);
+	return hours > 0 ? `${hours}:${String(minutes).padStart(2, "0")}:${seconds}` : `${minutes}:${seconds}`;
+}
+
 /**
  * Number of animation frames before the sequence repeats for a state.
  * Idle and done characters are a single static frame.
@@ -38,7 +57,7 @@ export function frameCount(state: Summary["overall"]): number {
  * @param summary Aggregate session state to draw.
  * @param frame Animation frame index.
  */
-export function renderCharacter(summary: Summary, frame: number): string {
+export function renderCharacter(summary: Summary, frame: number, extra: CharacterExtra = {}): string {
 	const state = summary.overall;
 	const step = frame % WALK_PATH.length;
 	const odd = frame % 2 === 1;
@@ -66,7 +85,7 @@ export function renderCharacter(summary: Summary, frame: number): string {
 		leftArm = odd ? -2 : 0;
 		rightArm = odd ? -2 : 0;
 		eyeHeight = 3;
-		background = odd ? "#3a2a12" : DARK;
+		background = odd ? (extra.escalated ? "#4a1a14" : "#3a2a12") : DARK;
 	}
 
 	const x = 5 + shift;
@@ -86,13 +105,23 @@ export function renderCharacter(summary: Summary, frame: number): string {
 	parts.push(cell(x + 9 + look, y + 4, 1, eyeHeight, DARK));
 
 	if (state === "attention") {
-		parts.push(`<text x="72" y="30" text-anchor="middle" font-family="Arial, sans-serif" font-size="34" font-weight="700" fill="#ffb454">!</text>`);
+		parts.push(`<text x="72" y="30" text-anchor="middle" font-family="Arial, sans-serif" font-size="34" font-weight="700" fill="${extra.escalated ? "#e5534b" : "#ffb454"}">!</text>`);
 	}
 
 	if (state === "done") {
 		parts.push(
 			`<path d="M56 24 L68 36 L90 12" fill="none" stroke="#7fb77e" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>`,
 		);
+	}
+
+	const clock =
+		state === "working" && extra.turnMs !== undefined
+			? formatClock(extra.turnMs)
+			: state === "attention" && extra.waitMs !== undefined && extra.waitMs >= 60_000
+				? `${Math.floor(extra.waitMs / 60_000)}m`
+				: "";
+	if (clock) {
+		parts.push(`<text x="136" y="20" text-anchor="end" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#f1ece4">${clock}</text>`);
 	}
 
 	if (summary.agents > 0) {
@@ -102,7 +131,7 @@ export function renderCharacter(summary: Summary, frame: number): string {
 		);
 	}
 
-	const label = LABEL[state];
+	const label = state === "attention" && extra.escalated ? { ...LABEL.attention, color: "#e5534b" } : LABEL[state];
 	parts.push(
 		`<text x="72" y="132" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" font-weight="700" fill="${label.color}">${label.text}</text>`,
 	);

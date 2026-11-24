@@ -1,5 +1,9 @@
 import streamDeck from "@elgato/streamdeck";
+import { AlertConfig } from "./alerts/config";
+import { AlertManager } from "./alerts/manager";
+import { createNotifier } from "./alerts/notifier";
 import { ClaudeStatus } from "./actions/claude-status";
+import { Connection } from "./actions/connection";
 import { ModelPicker } from "./actions/model-picker";
 import { SavedPrompts } from "./actions/saved-prompts";
 import { SendText } from "./actions/send-text";
@@ -14,6 +18,13 @@ streamDeck.logger.setLevel("info");
 
 const store = new SessionStore();
 store.start();
+
+const alertConfig = new AlertConfig();
+streamDeck.settings.getGlobalSettings().then((settings) => alertConfig.set(settings));
+streamDeck.settings.onDidReceiveGlobalSettings((ev) => alertConfig.set(ev.settings));
+
+const alerts = new AlertManager(store, alertConfig, createNotifier((message) => streamDeck.logger.error(message)));
+alerts.start();
 
 const usage = new UsageService();
 usage.on("change", (state) => {
@@ -30,11 +41,12 @@ store.on("change", (summary) => {
 });
 
 streamDeck.actions.registerAction(new SendText());
-streamDeck.actions.registerAction(new ClaudeStatus(store));
+streamDeck.actions.registerAction(new ClaudeStatus(store, alertConfig));
 streamDeck.actions.registerAction(new SessionOverview(store));
 streamDeck.actions.registerAction(new ModelPicker());
 streamDeck.actions.registerAction(new SavedPrompts());
 streamDeck.actions.registerAction(new Usage(usage));
+streamDeck.actions.registerAction(new Connection(store, usage));
 
 const hookServer = startHookServer(store, streamDeck.logger);
 
@@ -45,6 +57,7 @@ keyboard.start().catch((err: unknown) => {
 process.on("exit", () => {
 	keyboard.stop();
 	store.stop();
+	alerts.stop();
 	hookServer.close();
 });
 

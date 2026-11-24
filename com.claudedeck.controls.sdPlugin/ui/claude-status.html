@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<script src="sdpi-components.js"></script>
+		<style>
+			.help {
+				margin: 4px 0 0 0;
+				padding: 0;
+				font-size: 12px;
+				line-height: 1.5;
+				opacity: 0.75;
+			}
+		</style>
+	</head>
+	<body>
+		<sdpi-item label="Sound">
+			<sdpi-checkbox setting="alertSound" global default="true" label="Play a sound when a session needs you"></sdpi-checkbox>
+		</sdpi-item>
+
+		<sdpi-item label="Notification">
+			<sdpi-checkbox setting="alertToast" global default="true" label="Show a Windows notification"></sdpi-checkbox>
+		</sdpi-item>
+
+		<sdpi-item label="Finished">
+			<sdpi-checkbox setting="alertOnDone" global label="Also alert when a turn finishes"></sdpi-checkbox>
+		</sdpi-item>
+
+		<sdpi-item label="Escalate">
+			<sdpi-select setting="escalateMinutes" global default="3">
+				<option value="0">Never</option>
+				<option value="1">After 1 minute</option>
+				<option value="2">After 2 minutes</option>
+				<option value="3">After 3 minutes</option>
+				<option value="5">After 5 minutes</option>
+				<option value="10">After 10 minutes</option>
+			</sdpi-select>
+		</sdpi-item>
+
+		<sdpi-item label="Info">
+			<p class="help">
+				The character walks while Claude works and shows the turn timer. When a session needs you it hops. If it keeps
+				waiting past the escalation time, the alert turns red and sounds again every interval. These settings apply to all
+				Claude Status keys.
+			</p>
+		</sdpi-item>
+	</body>
+</html>

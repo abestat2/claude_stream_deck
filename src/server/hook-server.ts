@@ -7,6 +7,9 @@ const MAX_BODY_BYTES = 8 * 1024 * 1024;
 
 type Log = { info(message: string): void; error(message: string): void };
 
+/** Current state of the hook receiver, shared with the connection display. */
+export const hookServerStatus: { listening: boolean; error: string | undefined } = { listening: false, error: undefined };
+
 /**
  * Starts an HTTP server on the loopback interface that receives Claude Code hook events
  * as JSON `POST /event` requests and applies them to the session store.
@@ -56,6 +59,8 @@ export function startHookServer(store: SessionStore, log: Log): Server {
 	});
 
 	server.on("error", (err: NodeJS.ErrnoException) => {
+		hookServerStatus.listening = false;
+		hookServerStatus.error = err.code === "EADDRINUSE" ? "port in use" : err.message;
 		log.error(
 			err.code === "EADDRINUSE"
 				? `Hook server could not start: port ${HOOK_PORT} is already in use`
@@ -63,7 +68,11 @@ export function startHookServer(store: SessionStore, log: Log): Server {
 		);
 	});
 
-	server.listen(HOOK_PORT, HOOK_HOST, () => log.info(`Hook server listening on http://${HOOK_HOST}:${HOOK_PORT}/event`));
+	server.listen(HOOK_PORT, HOOK_HOST, () => {
+		hookServerStatus.listening = true;
+		hookServerStatus.error = undefined;
+		log.info(`Hook server listening on http://${HOOK_HOST}:${HOOK_PORT}/event`);
+	});
 	// The server must not keep the process alive, so the plugin exits when Stream Deck disconnects.
 	server.unref();
 	return server;
