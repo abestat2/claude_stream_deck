@@ -1,6 +1,7 @@
 import streamDeck from "@elgato/streamdeck";
 import { ClaudeStatus } from "./actions/claude-status";
 import { ModelPicker } from "./actions/model-picker";
+import { SavedPrompts } from "./actions/saved-prompts";
 import { SendText } from "./actions/send-text";
 import { SessionOverview } from "./actions/session-overview";
 import { keyboard } from "./input/keyboard";
@@ -32,6 +33,7 @@ streamDeck.actions.registerAction(new SendText());
 streamDeck.actions.registerAction(new ClaudeStatus(store));
 streamDeck.actions.registerAction(new SessionOverview(store));
 streamDeck.actions.registerAction(new ModelPicker());
+streamDeck.actions.registerAction(new SavedPrompts());
 streamDeck.actions.registerAction(new Usage(usage));
 
 const hookServer = startHookServer(store, streamDeck.logger);

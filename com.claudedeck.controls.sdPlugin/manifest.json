@@ -133,6 +133,31 @@
           "ShowTitle": false
         }
       ]
+    },
+    {
+      "Name": "Saved Prompts",
+      "UUID": "com.claudedeck.controls.saved-prompts",
+      "Icon": "imgs/actions/saved-prompts/icon",
+      "Tooltip": "Turn to choose a saved prompt, press to type it into the focused window.",
+      "PropertyInspectorPath": "ui/saved-prompts.html",
+      "Controllers": [
+        "Encoder"
+      ],
+      "Encoder": {
+        "layout": "layouts/canvas.json",
+        "Icon": "imgs/actions/saved-prompts/encoder",
+        "TriggerDescription": {
+          "Rotate": "Choose prompt",
+          "Push": "Send prompt",
+          "Touch": "Send prompt",
+          "LongTouch": ""
+        }
+      },
+      "States": [
+        {
+          "Image": "imgs/actions/saved-prompts/key"
+        }
+      ]
     }
   ]
 }

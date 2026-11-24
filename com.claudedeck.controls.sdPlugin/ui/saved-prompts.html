@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<script src="sdpi-components.js"></script>
+		<style>
+			.help {
+				margin: 4px 0 0 0;
+				padding: 0;
+				font-size: 12px;
+				line-height: 1.5;
+				opacity: 0.75;
+			}
+			.help code {
+				font-family: Consolas, monospace;
+			}
+		</style>
+	</head>
+	<body>
+		<sdpi-item label="Prompts">
+			<sdpi-textarea setting="prompts" placeholder="yes&#10;commit | please commit&#10;/graphify" rows="8"></sdpi-textarea>
+		</sdpi-item>
+
+		<sdpi-item label="Submit">
+			<sdpi-checkbox setting="submit" default="true" label="Press Enter after"></sdpi-checkbox>
+		</sdpi-item>
+
+		<sdpi-item label="Format">
+			<p class="help">
+				One prompt per line, in the order the dial scrolls through them.<br />
+				Write <code>label | text</code> to show a short label on the strip and send the longer text. Without a label, the
+				text is shown.<br />
+				Keys work as in Send Text: <code>{Esc}</code>, <code>{Shift+Tab}</code>, <code>{Ctrl+C}</code>. Type a literal brace
+				with <code>{{</code> or <code>}}</code>.<br />
+				Turn the dial to choose, then press the dial or tap the strip to send. Leave empty for <code>yes</code>,
+				<code>please commit</code>, <code>/graphify</code>.
+			</p>
+		</sdpi-item>
+	</body>
+</html>
