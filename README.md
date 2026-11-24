@@ -1,4 +1,23 @@
-# Claude Deck
+<p align="center">
+  <img src="docs/demo.gif" alt="The Claude Deck layout in the Stream Deck app: usage, context, permission mode, and connection keys on the top row; permission response, yes, /graphify, and status keys on the bottom row; and four dials below" width="492">
+</p>
+
+<h1 align="center">Claude Deck</h1>
+
+<p align="center"><b>Status and controls for Claude Code on a Stream Deck +</b></p>
+
+<p align="center">
+  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue"></a>
+  <img alt="Platform: Windows" src="https://img.shields.io/badge/platform-Windows-0078D6">
+  <img alt="Stream Deck 7.1 or later" src="https://img.shields.io/badge/Stream%20Deck-7.1%2B-5b5b5b">
+  <img alt="Device: Stream Deck +" src="https://img.shields.io/badge/device-Stream%20Deck%20%2B-5b5b5b">
+  <img alt="Supports keys and dials" src="https://img.shields.io/badge/supports-keys%20%26%20dials-d97757">
+  <img alt="Works with Claude Code" src="https://img.shields.io/badge/works%20with-Claude%20Code-d97757">
+  <img alt="Built with TypeScript" src="https://img.shields.io/badge/built%20with-TypeScript-3178C6">
+  <img alt="Node.js 24 or later" src="https://img.shields.io/badge/Node.js-24%2B-339933">
+  <img alt="Stream Deck SDK 3" src="https://img.shields.io/badge/Stream%20Deck%20SDK-3-5b5b5b">
+  <img alt="Version 0.1.0" src="https://img.shields.io/badge/version-0.1.0-lightgrey">
+</p>
 
 A Stream Deck plugin that shows the state of Claude Code sessions and sends input to them from a Stream Deck +.
 
@@ -166,3 +185,7 @@ tests/         mirrors src/
 ```
 
 The tests replace the keyboard, the network, the Stream Deck SDK, and the Claude settings files, so running them never types, connects, or touches real settings.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
