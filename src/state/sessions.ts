@@ -2,21 +2,23 @@ import { EventEmitter } from "node:events";
 
 /**
  * What a session is doing:
- * - `idle`: finished its turn and is waiting for the next prompt.
+ * - `idle`: nothing is happening.
  * - `working`: processing a prompt, running tools, or running subagents.
- * - `attention`: blocked on a permission prompt or a question for the user.
+ * - `attention`: blocked on a permission prompt, or finished a turn by asking the user a question.
+ * - `done`: finished a turn without a question. Reverts to `idle` after {@link DONE_FADE_MS}.
  */
-export type SessionState = "idle" | "working" | "attention";
+export type SessionState = "idle" | "working" | "attention" | "done";
 
 /** Aggregate view of all tracked sessions. */
 export type Summary = {
 	sessions: number;
 	working: number;
 	attention: number;
+	done: number;
 	idle: number;
 	/** Subagents currently running across all sessions. */
 	agents: number;
-	/** Most urgent state across sessions: attention, then working, then idle. */
+	/** Most urgent state across sessions: attention, then working, then done, then idle. */
 	overall: SessionState;
 };
 
@@ -26,6 +28,7 @@ export type HookEvent = {
 	session_id?: unknown;
 	agent_id?: unknown;
 	notification_type?: unknown;
+	last_assistant_message?: unknown;
 	cwd?: unknown;
 };
 
@@ -38,6 +41,9 @@ type Session = {
 /** A working session with no events for this long is reported as idle. */
 const WORKING_STALE_MS = 10 * 60 * 1000;
 
+/** A finished session with no further events for this long is reported as idle. */
+export const DONE_FADE_MS = 5 * 60 * 1000;
+
 /** A session with no events for this long is removed. */
 const SESSION_EXPIRY_MS = 2 * 60 * 60 * 1000;
 
@@ -46,6 +52,18 @@ const SWEEP_INTERVAL_MS = 30_000;
 
 /** Notification types that mean the session is waiting on the user. */
 const ATTENTION_NOTIFICATIONS = new Set(["permission_prompt", "elicitation_dialog"]);
+
+/**
+ * Reports whether a message ends by asking the user something, judged by a question mark
+ * in its final paragraph.
+ */
+export function endsWithQuestion(message: unknown): boolean {
+	if (typeof message !== "string") {
+		return false;
+	}
+	const paragraphs = message.trim().split(/\n\s*\n/);
+	return (paragraphs[paragraphs.length - 1] ?? "").includes("?");
+}
 
 /**
  * Tracks Claude Code sessions from hook events and emits `change` with a {@link Summary}
@@ -110,6 +128,9 @@ export class SessionStore extends EventEmitter {
 				break;
 
 			case "Stop":
+				session.state = endsWithQuestion(event.last_assistant_message) ? "attention" : "done";
+				break;
+
 			case "StopFailure":
 			case "SessionStart":
 				session.state = "idle";
@@ -137,7 +158,7 @@ export class SessionStore extends EventEmitter {
 	/** Returns the current aggregate view. */
 	summary(): Summary {
 		const now = Date.now();
-		const summary: Summary = { sessions: 0, working: 0, attention: 0, idle: 0, agents: 0, overall: "idle" };
+		const summary: Summary = { sessions: 0, working: 0, attention: 0, done: 0, idle: 0, agents: 0, overall: "idle" };
 
 		for (const [id, session] of this.sessions) {
 			if (now - session.lastSeen > SESSION_EXPIRY_MS) {
@@ -151,23 +172,27 @@ export class SessionStore extends EventEmitter {
 			summary.agents += session.agents.size;
 		}
 
-		summary.overall = summary.attention > 0 ? "attention" : summary.working > 0 ? "working" : "idle";
+		summary.overall =
+			summary.attention > 0 ? "attention" : summary.working > 0 ? "working" : summary.done > 0 ? "done" : "idle";
 		return summary;
 	}
 
 	/**
 	 * Resolves a session's reported state. A session with running subagents counts as working,
-	 * and a working session that has gone quiet counts as idle.
+	 * a working session that has gone quiet counts as idle, and a finished session fades to idle.
 	 */
 	private effectiveState(session: Session, now: number): SessionState {
-		const stale = now - session.lastSeen > WORKING_STALE_MS;
+		const quietFor = now - session.lastSeen;
 		if (session.state === "attention") {
 			return "attention";
 		}
-		if (stale) {
-			return "idle";
+		if (session.state === "working" || session.agents.size > 0) {
+			return quietFor > WORKING_STALE_MS ? "idle" : "working";
 		}
-		return session.state === "working" || session.agents.size > 0 ? "working" : "idle";
+		if (session.state === "done") {
+			return quietFor > DONE_FADE_MS ? "idle" : "done";
+		}
+		return "idle";
 	}
 
 	/** Emits `change` when the aggregate view differs from the last one emitted. */

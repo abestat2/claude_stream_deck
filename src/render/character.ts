@@ -14,6 +14,7 @@ const LABEL = {
 	idle: { text: "idle", color: "#8a8178" },
 	working: { text: "working", color: "#d97757" },
 	attention: { text: "NEEDS YOU", color: "#ffb454" },
+	done: { text: "done", color: "#7fb77e" },
 } as const;
 
 function cell(x: number, y: number, w: number, h: number, fill: string): string {
@@ -22,10 +23,10 @@ function cell(x: number, y: number, w: number, h: number, fill: string): string 
 
 /**
  * Number of animation frames before the sequence repeats for a state.
- * An idle character is a single static frame.
+ * Idle and done characters are a single static frame.
  */
 export function frameCount(state: Summary["overall"]): number {
-	return state === "idle" ? 1 : WALK_PATH.length;
+	return state === "idle" || state === "done" ? 1 : WALK_PATH.length;
 }
 
 /**
@@ -33,6 +34,7 @@ export function frameCount(state: Summary["overall"]): number {
  * - `idle`: standing still.
  * - `working`: walking back and forth, looking in the direction of travel.
  * - `attention`: hopping with wide eyes and an exclamation mark, on a pulsing background.
+ * - `done`: standing still with a green check mark.
  * @param summary Aggregate session state to draw.
  * @param frame Animation frame index.
  */
@@ -85,6 +87,12 @@ export function renderCharacter(summary: Summary, frame: number): string {
 
 	if (state === "attention") {
 		parts.push(`<text x="72" y="30" text-anchor="middle" font-family="Arial, sans-serif" font-size="34" font-weight="700" fill="#ffb454">!</text>`);
+	}
+
+	if (state === "done") {
+		parts.push(
+			`<path d="M56 24 L68 36 L90 12" fill="none" stroke="#7fb77e" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>`,
+		);
 	}
 
 	if (summary.agents > 0) {

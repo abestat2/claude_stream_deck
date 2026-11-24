@@ -13,7 +13,7 @@ const store = new SessionStore();
 store.start();
 store.on("change", (summary) => {
 	streamDeck.logger.info(
-		`Sessions: ${summary.sessions} (working ${summary.working}, attention ${summary.attention}, idle ${summary.idle}), agents: ${summary.agents}`,
+		`Sessions: ${summary.sessions} (working ${summary.working}, attention ${summary.attention}, done ${summary.done}, idle ${summary.idle}), agents: ${summary.agents}`,
 	);
 });
 
