@@ -208,6 +208,34 @@
           "ShowTitle": false
         }
       ]
+    },
+    {
+      "Name": "Context",
+      "UUID": "com.claudedeck.controls.context",
+      "Icon": "imgs/actions/context/icon",
+      "Tooltip": "Shows how full the context window is, with the model and token counts. Press to send /compact.",
+      "PropertyInspectorPath": "ui/context.html",
+      "Controllers": [
+        "Keypad",
+        "Encoder"
+      ],
+      "UserTitleEnabled": false,
+      "Encoder": {
+        "layout": "layouts/canvas.json",
+        "Icon": "imgs/actions/context/encoder",
+        "TriggerDescription": {
+          "Rotate": "",
+          "Push": "Send /compact",
+          "Touch": "Send /compact",
+          "LongTouch": ""
+        }
+      },
+      "States": [
+        {
+          "Image": "imgs/actions/context/key",
+          "ShowTitle": false
+        }
+      ]
     }
   ]
 }

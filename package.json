@@ -9,7 +9,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "hooks:install": "node scripts/install-hooks.mjs",
-    "hooks:remove": "node scripts/install-hooks.mjs --remove"
+    "hooks:remove": "node scripts/install-hooks.mjs --remove",
+    "statusline:install": "node scripts/install-hooks.mjs --statusline"
   },
   "dependencies": {
     "@elgato/streamdeck": "^3.0.6"

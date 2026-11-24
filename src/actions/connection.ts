@@ -43,12 +43,14 @@ export class Connection extends SingletonAction {
 
 	private draw(): void {
 		const lastEvent = this.store.lastEvent();
+		const lastStatus = this.store.lastStatus();
 		const usage = this.usage.state();
 		const image = svgDataUri(
 			renderConnection({
 				listening: hookServerStatus.listening,
 				serverError: hookServerStatus.error,
 				sinceLastEventMs: lastEvent === undefined ? undefined : Date.now() - lastEvent,
+				sinceLastStatusMs: lastStatus === undefined ? undefined : Date.now() - lastStatus,
 				sessions: this.store.summary().sessions,
 				usage: usage.error ?? (usage.fetchedAt === undefined ? undefined : "ok"),
 			}),

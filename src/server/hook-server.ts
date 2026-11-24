@@ -12,7 +12,8 @@ export const hookServerStatus: { listening: boolean; error: string | undefined }
 
 /**
  * Starts an HTTP server on the loopback interface that receives Claude Code hook events
- * as JSON `POST /event` requests and applies them to the session store.
+ * as JSON `POST /event` requests, and status line updates as JSON `POST /statusline` requests,
+ * and applies them to the session store.
  * Every request is answered immediately with an empty JSON object, so hooks never delay Claude Code.
  */
 export function startHookServer(store: SessionStore, log: Log): Server {
@@ -22,7 +23,7 @@ export function startHookServer(store: SessionStore, log: Log): Server {
 			res.end("{}");
 		};
 
-		if (req.method !== "POST" || req.url !== "/event") {
+		if (req.method !== "POST" || (req.url !== "/event" && req.url !== "/statusline")) {
 			respond(404);
 			return;
 		}
@@ -49,7 +50,12 @@ export function startHookServer(store: SessionStore, log: Log): Server {
 				return;
 			}
 			try {
-				store.handle(JSON.parse(Buffer.concat(chunks).toString("utf8")) as HookEvent);
+				const body: unknown = JSON.parse(Buffer.concat(chunks).toString("utf8"));
+				if (req.url === "/statusline") {
+					store.handleStatus(body);
+				} else {
+					store.handle(body as HookEvent);
+				}
 			} catch (err) {
 				log.error(`Ignored malformed hook event: ${err instanceof Error ? err.message : String(err)}`);
 			}

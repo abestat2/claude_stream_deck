@@ -4,6 +4,7 @@ import { AlertManager } from "./alerts/manager";
 import { createNotifier } from "./alerts/notifier";
 import { ClaudeStatus } from "./actions/claude-status";
 import { Connection } from "./actions/connection";
+import { Context } from "./actions/context";
 import { ModelPicker } from "./actions/model-picker";
 import { PermissionMode } from "./actions/permission-mode";
 import { PermissionResponse } from "./actions/permission";
@@ -29,6 +30,7 @@ const alerts = new AlertManager(store, alertConfig, createNotifier((message) => 
 alerts.start();
 
 const usage = new UsageService();
+store.on("status", (payload: { rate_limits?: unknown }) => usage.ingestStatusLine(payload.rate_limits));
 usage.on("change", (state) => {
 	const pct = (id: "session" | "week" | "sonnet"): string => {
 		const w = state.windows[id];
@@ -42,15 +44,26 @@ store.on("change", (summary) => {
 	);
 });
 
+let lastContextLine = "";
+store.on("detail", () => {
+	const latest = store.latestContext();
+	const line = latest ? `Context: ${Math.round(latest.contextPercent ?? 0)}% (${latest.model?.name ?? "unknown model"})` : "";
+	if (line && line !== lastContextLine) {
+		lastContextLine = line;
+		streamDeck.logger.info(line);
+	}
+});
+
 streamDeck.actions.registerAction(new SendText());
 streamDeck.actions.registerAction(new ClaudeStatus(store, alertConfig));
 streamDeck.actions.registerAction(new SessionOverview(store));
-streamDeck.actions.registerAction(new ModelPicker());
+streamDeck.actions.registerAction(new ModelPicker(store));
 streamDeck.actions.registerAction(new SavedPrompts());
 streamDeck.actions.registerAction(new Usage(usage));
 streamDeck.actions.registerAction(new Connection(store, usage));
 streamDeck.actions.registerAction(new PermissionResponse(store));
 streamDeck.actions.registerAction(new PermissionMode(store));
+streamDeck.actions.registerAction(new Context(store));
 
 const hookServer = startHookServer(store, streamDeck.logger);
 

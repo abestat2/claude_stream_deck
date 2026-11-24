@@ -13,6 +13,8 @@ export type ConnectionInfo = {
 	serverError: string | undefined;
 	/** Milliseconds since the last hook event, or undefined when none has arrived. */
 	sinceLastEventMs: number | undefined;
+	/** Milliseconds since the last status line update, or undefined when none has arrived. */
+	sinceLastStatusMs?: number | undefined;
 	sessions: number;
 	/** Usage reading status: `ok`, an error name, or undefined when usage is not being read. */
 	usage: string | undefined;
@@ -58,9 +60,10 @@ export function renderConnection(info: ConnectionInfo): string {
 		`<rect width="144" height="144" fill="${BACKGROUND}"/>`,
 		`<text x="12" y="28" font-family="Arial, sans-serif" font-size="16" font-weight="700" fill="${LABEL}">LINK</text>`,
 		`<circle cx="124" cy="22" r="8" fill="${info.serverError ? CRITICAL : healthy ? OK : WARN}"/>`,
-		row(66, "HOOKS", hooks.text, hooks.color),
-		row(96, "SESSIONS", String(info.sessions), VALUE),
-		row(126, "USAGE", info.usage ?? "off", usageColor),
+		row(58, "HOOKS", hooks.text, hooks.color),
+		row(82, "STATUS", info.sinceLastStatusMs === undefined ? "none yet" : formatAgo(info.sinceLastStatusMs), info.sinceLastStatusMs === undefined ? WARN : VALUE),
+		row(106, "SESSIONS", String(info.sessions), VALUE),
+		row(130, "USAGE", info.usage ?? "off", usageColor),
 	];
 
 	return `<svg xmlns="http://www.w3.org/2000/svg" width="144" height="144" viewBox="0 0 144 144">${parts.join("")}</svg>`;

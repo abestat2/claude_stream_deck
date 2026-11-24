@@ -51,6 +51,16 @@ export type SessionInfo = {
 	permissionMode: string | undefined;
 	/** Epoch milliseconds of the most recent event from the session. */
 	lastSeen: number;
+	/** Model in use, as last reported by the status line. */
+	model: { id: string; name: string } | undefined;
+	/** Percentage of the context window in use, as last reported by the status line. */
+	contextPercent: number | undefined;
+	/** Tokens in the context window. */
+	contextTokens: number | undefined;
+	/** Size of the context window in tokens. */
+	contextSize: number | undefined;
+	/** Reasoning effort level, when the model supports it. */
+	effort: string | undefined;
 };
 
 /** Fields read from a hook event payload. Other fields are ignored. */
@@ -77,6 +87,11 @@ type Session = {
 	pending: PendingRequest | undefined;
 	currentTool: string | undefined;
 	permissionMode: string | undefined;
+	model: { id: string; name: string } | undefined;
+	contextPercent: number | undefined;
+	contextTokens: number | undefined;
+	contextSize: number | undefined;
+	effort: string | undefined;
 };
 
 /** A working session with no events for this long is reported as idle. */
@@ -162,6 +177,7 @@ export class SessionStore extends EventEmitter {
 	private lastKey = "";
 	private lastDetailKey = "";
 	private lastEventAt: number | undefined;
+	private lastStatusAt: number | undefined;
 	private timer: NodeJS.Timeout | undefined;
 
 	/** Starts the periodic sweep that expires stale sessions. */
@@ -193,21 +209,7 @@ export class SessionStore extends EventEmitter {
 			return;
 		}
 
-		let session = this.tracked.get(id);
-		if (!session) {
-			session = {
-				state: "idle",
-				agents: new Set(),
-				lastSeen: now,
-				project: "",
-				turnStartedAt: undefined,
-				attentionSince: undefined,
-				pending: undefined,
-				currentTool: undefined,
-				permissionMode: undefined,
-			};
-			this.tracked.set(id, session);
-		}
+		const session = this.session(id, now);
 		session.lastSeen = now;
 
 		const project = projectName(event.cwd);
@@ -342,6 +344,11 @@ export class SessionStore extends EventEmitter {
 				currentTool: session.currentTool,
 				permissionMode: session.permissionMode,
 				lastSeen: session.lastSeen,
+				model: session.model,
+				contextPercent: session.contextPercent,
+				contextTokens: session.contextTokens,
+				contextSize: session.contextSize,
+				effort: session.effort,
 			});
 		}
 
@@ -359,6 +366,59 @@ export class SessionStore extends EventEmitter {
 			.sort((a, b) => (b.attentionSince ?? 0) - (a.attentionSince ?? 0));
 		const latest = permissions[0];
 		return latest?.pending ? { session: latest, request: latest.pending, others: waiting.length - 1 } : undefined;
+	}
+
+	/**
+	 * Applies one status line update: the model, context window use, and reasoning effort of a session.
+	 * Emits `status` with the raw payload so its other fields, such as plan limits, can be used elsewhere.
+	 * A status line update does not count as session activity, so it never keeps a session from going stale.
+	 */
+	handleStatus(payload: unknown): void {
+		const data = (typeof payload === "object" && payload !== null ? payload : {}) as Record<string, unknown>;
+		const id = typeof data.session_id === "string" ? data.session_id : undefined;
+		if (!id) {
+			return;
+		}
+
+		const now = Date.now();
+		this.lastStatusAt = now;
+		const session = this.session(id, now);
+
+		const model = data.model as { id?: unknown; display_name?: unknown } | undefined;
+		if (typeof model?.display_name === "string" && model.display_name.length > 0) {
+			session.model = { id: typeof model.id === "string" ? model.id : "", name: model.display_name };
+		}
+
+		const context = data.context_window as { used_percentage?: unknown; total_input_tokens?: unknown; context_window_size?: unknown } | undefined;
+		if (typeof context?.used_percentage === "number") {
+			session.contextPercent = context.used_percentage;
+			session.contextTokens = typeof context.total_input_tokens === "number" ? context.total_input_tokens : undefined;
+			session.contextSize = typeof context.context_window_size === "number" ? context.context_window_size : undefined;
+		}
+
+		const effort = data.effort as { level?: unknown } | undefined;
+		session.effort = typeof effort?.level === "string" ? effort.level : undefined;
+
+		const dir = (data.workspace as { current_dir?: unknown } | undefined)?.current_dir ?? data.cwd;
+		if (!session.project && projectName(dir)) {
+			session.project = projectName(dir);
+		}
+
+		this.emit("status", data);
+		this.publish();
+	}
+
+	/**
+	 * Returns the most recently active session that has reported context window use,
+	 * or undefined when no status line update has arrived.
+	 */
+	latestContext(): SessionInfo | undefined {
+		return this.sessions().find((session) => session.contextPercent !== undefined);
+	}
+
+	/** Returns the epoch milliseconds of the most recent status line update, or undefined when none has arrived. */
+	lastStatus(): number | undefined {
+		return this.lastStatusAt;
 	}
 
 	/** Returns the epoch milliseconds of the most recent hook event, or undefined when none has arrived. */
@@ -381,6 +441,31 @@ export class SessionStore extends EventEmitter {
 		return session.state;
 	}
 
+	/** Returns the tracked session with the given id, creating an idle one when it is not tracked. */
+	private session(id: string, now: number): Session {
+		let session = this.tracked.get(id);
+		if (!session) {
+			session = {
+				state: "idle",
+				agents: new Set(),
+				lastSeen: now,
+				project: "",
+				turnStartedAt: undefined,
+				attentionSince: undefined,
+				pending: undefined,
+				currentTool: undefined,
+				permissionMode: undefined,
+				model: undefined,
+				contextPercent: undefined,
+				contextTokens: undefined,
+				contextSize: undefined,
+				effort: undefined,
+			};
+			this.tracked.set(id, session);
+		}
+		return session;
+	}
+
 	/** Sets a session's state and clears the wait details unless the state is `attention`. */
 	private setState(session: Session, state: SessionState): void {
 		session.state = state;
@@ -400,7 +485,7 @@ export class SessionStore extends EventEmitter {
 		}
 
 		const detailKey = JSON.stringify(
-			this.sessions().map((s) => [s.id, s.project, s.state, s.agents, s.pending, s.currentTool, s.permissionMode]),
+			this.sessions().map((s) => [s.id, s.project, s.state, s.agents, s.pending, s.currentTool, s.permissionMode, s.model?.name, s.effort, s.contextPercent === undefined ? undefined : Math.round(s.contextPercent)]),
 		);
 		if (detailKey !== this.lastDetailKey) {
 			this.lastDetailKey = detailKey;

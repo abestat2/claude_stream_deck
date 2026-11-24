@@ -6,11 +6,13 @@ import streamDeck, {
 	SingletonAction,
 	type TouchTapEvent,
 	type WillAppearEvent,
+	type WillDisappearEvent,
 } from "@elgato/streamdeck";
 import { keyboard } from "../input/keyboard";
 import { parseSequence } from "../input/sequence";
 import { renderPicker } from "../render/picker";
 import { svgDataUri } from "../render/character";
+import type { SessionStore } from "../state/sessions";
 
 type Settings = {
 	/** Model names, one per line, as accepted by the `/model` command. */
@@ -40,6 +42,21 @@ function parseModels(settings: Settings): string[] {
 @action({ UUID: "com.claudedeck.controls.model-picker" })
 export class ModelPicker extends SingletonAction<Settings> {
 	private readonly selections = new Map<string, Selection>();
+	private readonly lists = new Map<string, string[]>();
+
+	constructor(private readonly store: SessionStore) {
+		super();
+		store.on("detail", () => {
+			for (const [id, models] of this.lists) {
+				this.drawById(id, models);
+			}
+		});
+	}
+
+	override onWillDisappear(ev: WillDisappearEvent<Settings>): void {
+		this.lists.delete(ev.action.id);
+		this.selections.delete(ev.action.id);
+	}
 
 	override onWillAppear(ev: WillAppearEvent<Settings>): void {
 		this.draw(ev.action, parseModels(ev.payload.settings));
@@ -94,12 +111,15 @@ export class ModelPicker extends SingletonAction<Settings> {
 	}
 
 	private drawById(id: string, models: string[]): void {
+		this.lists.set(id, models);
 		const selection = this.selection(id);
 		if (selection.index >= models.length) {
 			selection.index = 0;
 		}
 		const name = models[selection.index] ?? "";
-		const image = svgDataUri(renderPicker(models, selection.index, selection.lastSent === name));
+		const current = this.store.sessions().find((session) => session.model !== undefined)?.model?.name;
+		const active = current !== undefined && name.length > 0 && current.toLowerCase().includes(name.toLowerCase());
+		const image = svgDataUri(renderPicker(models, selection.index, selection.lastSent === name, current, active));
 
 		for (const instance of this.actions) {
 			if (instance.id === id && instance.isDial()) {

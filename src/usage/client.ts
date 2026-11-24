@@ -41,6 +41,9 @@ const DEFAULT_RATE_LIMIT_WAIT_MS = 120_000;
 
 const REQUEST_TIMEOUT_MS = 8_000;
 
+/** Age of the service's own reading after which status line limits may replace it. */
+const STATUS_LINE_FALLBACK_AFTER_MS = 5 * 60_000;
+
 type Credentials = { accessToken: string; expiresAt: number | undefined };
 
 /** Reads the access token from the Claude Code login file. The file is only read, never modified. */
@@ -112,6 +115,31 @@ export class UsageService extends EventEmitter {
 	/** Returns the latest result. */
 	state(): UsageState {
 		return this.current;
+	}
+
+	/**
+	 * Applies plan limits reported by the Claude Code status line, as a fallback while the service's own
+	 * reading is unavailable or more than five minutes old. The 5-hour and weekly windows are replaced;
+	 * other windows are kept.
+	 */
+	ingestStatusLine(rateLimits: unknown): void {
+		const limits = (typeof rateLimits === "object" && rateLimits !== null ? rateLimits : {}) as Record<string, unknown>;
+		const own = this.current.fetchedAt;
+		if (own !== undefined && !this.current.error && Date.now() - own < STATUS_LINE_FALLBACK_AFTER_MS) {
+			return;
+		}
+
+		const windows = { ...this.current.windows };
+		for (const [key, id] of [["five_hour", "session"], ["seven_day", "week"]] as const) {
+			const entry = limits[key] as { used_percentage?: unknown; resets_at?: unknown } | null | undefined;
+			if (typeof entry?.used_percentage === "number") {
+				const resetsAt = typeof entry.resets_at === "number" ? new Date(entry.resets_at * 1000) : undefined;
+				windows[id] = { percent: entry.used_percentage, resetsAt };
+			}
+		}
+		if (JSON.stringify(windows) !== JSON.stringify(this.current.windows)) {
+			this.update({ windows, error: undefined });
+		}
 	}
 
 	/**

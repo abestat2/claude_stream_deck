@@ -1,3 +1,5 @@
+import { clipText } from "./text";
+
 const DIM = "#6f675f";
 const LABEL = "#8a8178";
 const NAME = "#f1ece4";
@@ -19,12 +21,17 @@ function nameFontSize(name: string): number {
  * @param models All selectable model names.
  * @param index Index of the highlighted model.
  * @param sent True when the highlighted model is the one most recently sent to the terminal.
+ * @param current Name of the model the session is using, when known. It is shown beside the title.
+ * @param active True when the highlighted model is the one the session is using.
  */
-export function renderPicker(models: string[], index: number, sent: boolean): string {
+export function renderPicker(models: string[], index: number, sent: boolean, current?: string, active = false): string {
 	const name = models[index] ?? "";
 	const parts = [
 		`<rect width="200" height="100" fill="#1f1d1a"/>`,
-		`<text x="100" y="20" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="${LABEL}">MODEL</text>`,
+		current === undefined
+			? `<text x="100" y="20" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="${LABEL}">MODEL</text>`
+			: `<text x="10" y="20" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="${LABEL}">MODEL</text>` +
+				`<text x="190" y="20" text-anchor="end" font-family="Arial, sans-serif" font-size="12" font-weight="700" fill="${DIM}">${escapeXml(clipText(current, 18))}</text>`,
 		`<text x="100" y="62" text-anchor="middle" font-family="Arial, sans-serif" font-size="${nameFontSize(name)}" font-weight="700" fill="${NAME}">${escapeXml(name)}</text>`,
 	];
 
@@ -33,9 +40,10 @@ export function renderPicker(models: string[], index: number, sent: boolean): st
 		parts.push(`<text x="190" y="58" text-anchor="end" font-family="Arial, sans-serif" font-size="22" fill="${DIM}">&#8250;</text>`);
 	}
 
-	const caption = sent ? "sent" : "press to send";
+	const caption = active ? "active" : sent ? "sent" : "press to send";
+	const captionColor = active ? "#7fb77e" : sent ? LABEL : ACCENT;
 	parts.push(
-		`<text x="100" y="94" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="${sent ? LABEL : ACCENT}">${caption}</text>`,
+		`<text x="100" y="94" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="${captionColor}">${caption}</text>`,
 	);
 
 	const dots = Math.min(models.length, 12);

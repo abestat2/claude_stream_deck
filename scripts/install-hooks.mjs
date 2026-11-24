@@ -2,7 +2,8 @@
 //
 // Usage:
 //   node scripts/install-hooks.mjs            add the hooks to the user settings file
-//   node scripts/install-hooks.mjs --remove   remove the hooks
+//   node scripts/install-hooks.mjs --statusline   also install the status line forwarder
+//   node scripts/install-hooks.mjs --remove   remove the hooks and the status line forwarder
 //   node scripts/install-hooks.mjs --port N   use a different receiver port (default 47831)
 //   node scripts/install-hooks.mjs --file P   edit the settings file at path P
 //
@@ -12,6 +13,7 @@
 import { copyFileSync, existsSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 const EVENTS = [
   "SessionStart",
@@ -65,6 +67,27 @@ if (Object.keys(hooks).length > 0) {
   settings.hooks = hooks;
 } else {
   delete settings.hooks;
+}
+
+// The status line command forwards model, context, and plan limit data to the plugin.
+// It is set only when no status line exists or the existing one is already the forwarder,
+// unless --force-statusline is given.
+const forwarder = fileURLToPath(new URL("../com.claudedeck.controls.sdPlugin/scripts/statusline-forward.mjs", import.meta.url)).replace(/\\/g, "/");
+const statusLine = { type: "command", command: `node "${forwarder}"` };
+const isForwarder = (value) => value?.type === "command" && typeof value.command === "string" && value.command.includes("statusline-forward.mjs");
+
+if (remove) {
+  if (isForwarder(settings.statusLine)) {
+    delete settings.statusLine;
+    console.log("Removed the status line forwarder.");
+  }
+} else if (args.includes("--statusline")) {
+  if (!settings.statusLine || isForwarder(settings.statusLine) || args.includes("--force-statusline")) {
+    settings.statusLine = statusLine;
+    console.log("Installed the status line forwarder.");
+  } else {
+    console.log("A different status line is already configured, so it was left unchanged. Use --force-statusline to replace it.");
+  }
 }
 
 if (existsSync(file)) {
