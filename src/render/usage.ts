@@ -33,7 +33,7 @@ export function usageColor(percent: number): string {
 
 /** Formats the time until a reset, for example `2h 14m`, `3d 4h`, or `45m`. */
 export function formatReset(resetsAt: Date | undefined, now = Date.now()): string {
-	if (!resetsAt) {
+	if (!resetsAt || Number.isNaN(resetsAt.getTime())) {
 		return "";
 	}
 	const minutes = Math.max(0, Math.round((resetsAt.getTime() - now) / 60_000));

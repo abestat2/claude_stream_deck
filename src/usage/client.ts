@@ -83,7 +83,10 @@ export function parseUsage(body: unknown): Partial<Record<WindowId, UsageWindow>
 
 	// Accounts that lack the top-level windows report the same figures in the limits list.
 	if (Array.isArray(data.limits)) {
-		for (const limit of data.limits as { kind?: unknown; percent?: unknown; resets_at?: unknown }[]) {
+		for (const limit of data.limits as ({ kind?: unknown; percent?: unknown; resets_at?: unknown } | null)[]) {
+			if (!limit || typeof limit !== "object") {
+				continue;
+			}
 			const id = limit.kind === "session" ? "session" : limit.kind === "weekly_all" ? "week" : undefined;
 			if (id && !windows[id] && typeof limit.percent === "number") {
 				windows[id] = toWindow({ utilization: limit.percent, resets_at: limit.resets_at });

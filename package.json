@@ -7,6 +7,7 @@
     "build": "node build.mjs",
     "watch": "node build.mjs --watch",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
     "hooks:install": "node scripts/install-hooks.mjs",
     "hooks:remove": "node scripts/install-hooks.mjs --remove"
   },
@@ -17,6 +18,7 @@
     "@elgato/cli": "^1.10.5",
     "@types/node": "^20.19.43",
     "esbuild": "^0.28.2",
-    "typescript": "^7.0.2"
+    "typescript": "^7.0.2",
+    "vitest": "^3.2.7"
   }
 }

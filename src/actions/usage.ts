@@ -32,7 +32,7 @@ function isWindow(value: unknown): value is WindowId {
  * Resolves the two windows to show from the settings. When both bars are set to the same window,
  * the bottom bar shows the next window in order instead.
  */
-function toPair(settings: Settings): WindowPair {
+export function toPair(settings: Settings): WindowPair {
 	const first = isWindow(settings.first) ? settings.first : "session";
 	const second = isWindow(settings.second) ? settings.second : "week";
 	if (second !== first) {
