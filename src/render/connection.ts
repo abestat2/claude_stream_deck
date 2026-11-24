@@ -1,9 +1,4 @@
-const BACKGROUND = "#1f1d1a";
-const LABEL = "#8a8178";
-const VALUE = "#f1ece4";
-const OK = "#7fb77e";
-const WARN = "#ffb454";
-const CRITICAL = "#e5534b";
+import { ACCENT, BACKGROUND, CRITICAL, LABEL, VALUE } from "./palette";
 
 /** Connection details to display. */
 export type ConnectionInfo = {
@@ -46,22 +41,22 @@ export function renderConnection(info: ConnectionInfo): string {
 	if (info.serverError) {
 		hooks = { text: "port busy", color: CRITICAL };
 	} else if (!info.listening) {
-		hooks = { text: "starting", color: WARN };
+		hooks = { text: "starting", color: ACCENT };
 	} else if (info.sinceLastEventMs === undefined) {
-		hooks = { text: "none yet", color: WARN };
+		hooks = { text: "none yet", color: ACCENT };
 	} else {
 		hooks = { text: formatAgo(info.sinceLastEventMs), color: VALUE };
 	}
 
 	const healthy = info.listening && !info.serverError && info.sinceLastEventMs !== undefined;
-	const usageColor = info.usage === "ok" ? OK : info.usage === undefined ? LABEL : WARN;
+	const usageColor = info.usage === "ok" ? VALUE : info.usage === undefined ? LABEL : ACCENT;
 
 	const parts = [
 		`<rect width="144" height="144" fill="${BACKGROUND}"/>`,
 		`<text x="12" y="28" font-family="Arial, sans-serif" font-size="16" font-weight="700" fill="${LABEL}">LINK</text>`,
-		`<circle cx="124" cy="22" r="8" fill="${info.serverError ? CRITICAL : healthy ? OK : WARN}"/>`,
+		`<circle cx="124" cy="22" r="8" fill="${info.serverError ? CRITICAL : healthy ? VALUE : ACCENT}"/>`,
 		row(58, "HOOKS", hooks.text, hooks.color),
-		row(82, "STATUS", info.sinceLastStatusMs === undefined ? "none yet" : formatAgo(info.sinceLastStatusMs), info.sinceLastStatusMs === undefined ? WARN : VALUE),
+		row(82, "STATUS", info.sinceLastStatusMs === undefined ? "none yet" : formatAgo(info.sinceLastStatusMs), info.sinceLastStatusMs === undefined ? ACCENT : VALUE),
 		row(106, "SESSIONS", String(info.sessions), VALUE),
 		row(130, "USAGE", info.usage ?? "off", usageColor),
 	];

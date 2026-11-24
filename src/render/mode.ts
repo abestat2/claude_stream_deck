@@ -1,21 +1,15 @@
 import { clipText, escapeXml } from "./text";
 
-const BACKGROUND = "#1f1d1a";
-const LABEL = "#8a8178";
-const VALUE = "#f1ece4";
-const ACCENT = "#d97757";
-const OK = "#7fb77e";
-const WARN = "#ffb454";
-const CRITICAL = "#e5534b";
+import { ACCENT, BACKGROUND, CRITICAL, LABEL, VALUE } from "./palette";
 
 type ModeStyle = { name: string; color: string };
 
 const MODES: Record<string, ModeStyle> = {
 	default: { name: "Default", color: VALUE },
 	acceptEdits: { name: "Accept edits", color: ACCENT },
-	plan: { name: "Plan", color: OK },
-	auto: { name: "Auto", color: WARN },
-	dontAsk: { name: "Don't ask", color: WARN },
+	plan: { name: "Plan", color: ACCENT },
+	auto: { name: "Auto", color: ACCENT },
+	dontAsk: { name: "Don't ask", color: ACCENT },
 	bypassPermissions: { name: "Bypass", color: CRITICAL },
 };
 
@@ -55,10 +49,10 @@ export function renderMode(mode: string | undefined, project: string, stale: boo
 		);
 	});
 
-	const caption = stale ? "cycled - updates next message" : project;
+	const caption = stale ? "updates next msg" : project;
 	if (caption) {
 		parts.push(
-			`<text x="72" y="132" text-anchor="middle" font-family="Arial, sans-serif" font-size="${stale ? 11 : 13}" font-weight="700" fill="${stale ? WARN : LABEL}">${escapeXml(clipText(caption, 30))}</text>`,
+			`<text x="72" y="132" text-anchor="middle" font-family="Arial, sans-serif" font-size="${stale ? 11 : 13}" font-weight="700" fill="${stale ? ACCENT : LABEL}">${escapeXml(clipText(caption, stale ? 24 : 18))}</text>`,
 		);
 	}
 

@@ -6,17 +6,15 @@ import { fillOf, textElements } from "../helpers/svg";
 const LABEL = "#8a8178";
 const VALUE = "#f1ece4";
 const ACCENT = "#d97757";
-const OK = "#7fb77e";
-const WARN = "#ffb454";
 const CRITICAL = "#e5534b";
 
 describe("modeStyle", () => {
 	it.each([
 		["default", "Default", VALUE],
 		["acceptEdits", "Accept edits", ACCENT],
-		["plan", "Plan", OK],
-		["auto", "Auto", WARN],
-		["dontAsk", "Don't ask", WARN],
+		["plan", "Plan", ACCENT],
+		["auto", "Auto", ACCENT],
+		["dontAsk", "Don't ask", ACCENT],
 		["bypassPermissions", "Bypass", CRITICAL],
 	])("maps %s to %s", (mode, name, color) => {
 		expect(modeStyle(mode)).toEqual({ name, color });
@@ -43,7 +41,7 @@ describe("renderMode", () => {
 	it("labels the key and shows the mode and the project", () => {
 		const svg = renderMode("plan", "demo", false);
 		expect(textElements(svg)).toEqual(["MODE", "Plan", "demo"]);
-		expect(fillOf(svg, "Plan")).toBe(OK);
+		expect(fillOf(svg, "Plan")).toBe(ACCENT);
 		expect(fillOf(svg, "demo")).toBe(LABEL);
 	});
 
@@ -72,22 +70,22 @@ describe("renderMode", () => {
 
 	it("replaces the project with the stale caption in amber", () => {
 		const svg = renderMode("plan", "demo", true);
-		expect(textElements(svg)).toEqual(["MODE", "Plan", "cycled - updates next message"]);
-		expect(fillOf(svg, "cycled - updates next message")).toBe(WARN);
+		expect(textElements(svg)).toEqual(["MODE", "Plan", "updates next msg"]);
+		expect(fillOf(svg, "updates next msg")).toBe(ACCENT);
 		expect(svg).toContain('font-size="11"');
 	});
 
 	it("shows the stale caption even without a project", () => {
-		expect(textElements(renderMode("plan", "", true))).toContain("cycled - updates next message");
+		expect(textElements(renderMode("plan", "", true))).toContain("updates next msg");
 	});
 
 	it("omits the caption when there is no project and the mode is current", () => {
 		expect(textElements(renderMode("plan", "", false))).toEqual(["MODE", "Plan"]);
 	});
 
-	it("clips a long project to 30 characters", () => {
+	it("clips a long project to 18 characters", () => {
 		const project = "p".repeat(40);
-		expect(textElements(renderMode("plan", project, false)).at(-1)).toBe("p".repeat(29) + "…");
+		expect(textElements(renderMode("plan", project, false)).at(-1)).toBe("p".repeat(17) + "…");
 	});
 
 	it("escapes special characters in the mode and the project", () => {

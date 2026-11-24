@@ -117,12 +117,12 @@ describe("PermissionMode", () => {
 		handler.onWillAppear({ action: k } as never);
 		vi.advanceTimersByTime(10);
 		await press();
-		expect(texts()).toEqual(["MODE", "Plan", "cycled - updates next message"]);
+		expect(texts()).toEqual(["MODE", "Plan", "updates next msg"]);
 	});
 
 	it("marks the display stale when no hook event has ever arrived", async () => {
 		await press();
-		expect(texts()).toContain("cycled - updates next message");
+		expect(texts()).toContain("updates next msg");
 	});
 
 	it("keeps the stale mark through status line updates, which are not hook events", async () => {
@@ -132,7 +132,7 @@ describe("PermissionMode", () => {
 		await press();
 		vi.advanceTimersByTime(10);
 		store.handleStatus({ session_id: "a", model: { id: "m", display_name: "Opus" } });
-		expect(texts()).toContain("cycled - updates next message");
+		expect(texts()).toContain("updates next msg");
 	});
 
 	it("clears the stale mark when a newer hook event arrives", async () => {

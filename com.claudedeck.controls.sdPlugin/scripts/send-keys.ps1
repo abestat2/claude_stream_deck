@@ -154,7 +154,7 @@ function Send-Clipboard {
     $text = Get-ClipboardText
     if ([string]::IsNullOrEmpty($text)) { return }
     $text = $text.TrimEnd("`r", "`n")
-    if ($text.Length -gt $maxClipboardChars) { $text = $text.Substring(0, $maxClipboardChars) }
+    if ($text.Length -gt $maxClipboardChars) { $text = $text.Substring(0, $maxClipboardChars).TrimEnd("`r", "`n") }
     $lines = $text -split "`r?`n"
     for ($i = 0; $i -lt $lines.Length; $i++) {
         if ($i -gt 0) { Send-Key 74 $false ([uint16[]]@(17)) }

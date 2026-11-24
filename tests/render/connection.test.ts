@@ -2,8 +2,7 @@ import { describe, expect, it } from "vitest";
 import { formatAgo, renderConnection, type ConnectionInfo } from "../../src/render/connection";
 import { textContent, xmlProblem } from "../helpers/xml";
 
-const OK = "#7fb77e";
-const WARN = "#ffb454";
+const ACCENT = "#d97757";
 const CRITICAL = "#e5534b";
 const LABEL = "#8a8178";
 const VALUE = "#f1ece4";
@@ -87,22 +86,22 @@ describe("renderConnection", () => {
 	it("shows a server that is not listening as starting with an amber dot", () => {
 		const svg = renderConnection(info({ listening: false }));
 		expect(textContent(svg)).toContain("starting");
-		expect(colorOf(svg, "starting")).toBe(WARN);
-		expect(dot(svg)).toBe(WARN);
+		expect(colorOf(svg, "starting")).toBe(ACCENT);
+		expect(dot(svg)).toBe(ACCENT);
 	});
 
 	it("shows a listening server without events as none yet with an amber dot", () => {
 		const svg = renderConnection(info({ sinceLastEventMs: undefined }));
 		expect(textContent(svg)).toContain("none yet");
-		expect(colorOf(svg, "none yet")).toBe(WARN);
-		expect(dot(svg)).toBe(WARN);
+		expect(colorOf(svg, "none yet")).toBe(ACCENT);
+		expect(dot(svg)).toBe(ACCENT);
 	});
 
 	it("shows the time since the last event with a green dot", () => {
 		const svg = renderConnection(info({ sinceLastEventMs: 125_000 }));
 		expect(textContent(svg)).toContain("2m ago");
 		expect(colorOf(svg, "2m ago")).toBe(VALUE);
-		expect(dot(svg)).toBe(OK);
+		expect(dot(svg)).toBe(VALUE);
 	});
 
 	it("shows the session count", () => {
@@ -114,13 +113,13 @@ describe("renderConnection", () => {
 	it("shows ok usage in green", () => {
 		const svg = renderConnection(info({ usage: "ok" }));
 		expect(textContent(svg)).toContain("USAGEok");
-		expect(colorOf(svg, "ok")).toBe(OK);
+		expect(colorOf(svg, "ok")).toBe(VALUE);
 	});
 
 	it("shows an error usage status in amber", () => {
 		const svg = renderConnection(info({ usage: "unauthorized" }));
 		expect(textContent(svg)).toContain("USAGEunauthorized");
-		expect(colorOf(svg, "unauthorized")).toBe(WARN);
+		expect(colorOf(svg, "unauthorized")).toBe(ACCENT);
 	});
 
 	it("shows unread usage as off in the label colour", () => {

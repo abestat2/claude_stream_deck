@@ -3,7 +3,7 @@ import { type ConnectionInfo, renderConnection } from "../../src/render/connecti
 import { xmlProblem } from "../helpers/xml";
 import { fillOf, textElements } from "../helpers/svg";
 
-const WARN = "#ffb454";
+const ACCENT = "#d97757";
 const VALUE = "#f1ece4";
 
 function info(overrides: Partial<ConnectionInfo> = {}): ConnectionInfo {
@@ -24,7 +24,7 @@ describe("renderConnection status row", () => {
 	it("shows none yet in amber when no status line update has arrived", () => {
 		const svg = renderConnection(info({ sinceLastStatusMs: undefined }));
 		expect(valueAfter(svg, "STATUS")).toBe("none yet");
-		expect(fillOf(svg, "none yet")).toBe(WARN);
+		expect(fillOf(svg, "none yet")).toBe(ACCENT);
 	});
 
 	it("shows none yet when the field is omitted", () => {

@@ -1,12 +1,7 @@
 import { escapeXml, clipText } from "./text";
 import { usageColor } from "./usage";
 
-const BACKGROUND = "#1f1d1a";
-const LABEL = "#8a8178";
-const DIM = "#6f675f";
-const VALUE = "#f1ece4";
-const TRACK = "#34302c";
-const WARN = "#ffb454";
+import { ACCENT, BACKGROUND, DIM, LABEL, TRACK, VALUE } from "./palette";
 
 /** Context window use of one session. */
 export type ContextInfo = {
@@ -64,7 +59,7 @@ export function renderContextKey(info: ContextInfo | undefined, reason: ContextM
 	const parts = [text(12, 28, 16, LABEL, "CONTEXT")];
 
 	if (!info) {
-		missingLines(reason).forEach((line, i) => parts.push(text(72, 76 + i * 22, i === 0 ? 18 : 14, i === 0 ? WARN : LABEL, line, "middle")));
+		missingLines(reason).forEach((line, i) => parts.push(text(72, 76 + i * 22, i === 0 ? 18 : 14, i === 0 ? ACCENT : LABEL, line, "middle")));
 		return wrap(144, 144, parts);
 	}
 
@@ -85,7 +80,7 @@ export function renderContextDial(info: ContextInfo | undefined, reason: Context
 	const parts = [text(12, 24, 14, LABEL, "CONTEXT")];
 
 	if (!info) {
-		missingLines(reason).forEach((line, i) => parts.push(text(100, 58 + i * 22, i === 0 ? 18 : 14, i === 0 ? WARN : LABEL, line, "middle")));
+		missingLines(reason).forEach((line, i) => parts.push(text(100, 58 + i * 22, i === 0 ? 18 : 14, i === 0 ? ACCENT : LABEL, line, "middle")));
 		return wrap(200, 100, parts);
 	}
 
