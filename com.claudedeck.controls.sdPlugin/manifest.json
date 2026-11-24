@@ -261,5 +261,14 @@
         }
       ]
     }
+  ],
+  "Profiles": [
+    {
+      "Name": "profiles/ClaudeDeck",
+      "DeviceType": 7,
+      "Readonly": false,
+      "DontAutoSwitchWhenInstalled": true,
+      "AutoInstall": true
+    }
   ]
 }

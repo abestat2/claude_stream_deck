@@ -10,7 +10,8 @@
     "test": "vitest run",
     "hooks:install": "node com.claudedeck.controls.sdPlugin/scripts/install-hooks.mjs",
     "hooks:remove": "node com.claudedeck.controls.sdPlugin/scripts/install-hooks.mjs --remove",
-    "statusline:install": "node com.claudedeck.controls.sdPlugin/scripts/install-hooks.mjs --statusline"
+    "statusline:install": "node com.claudedeck.controls.sdPlugin/scripts/install-hooks.mjs --statusline",
+    "profile:build": "node scripts/build-profile.mjs"
   },
   "dependencies": {
     "@elgato/streamdeck": "^3.0.6"
