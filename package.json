@@ -11,7 +11,9 @@
     "hooks:install": "node com.claudedeck.controls.sdPlugin/scripts/install-hooks.mjs",
     "hooks:remove": "node com.claudedeck.controls.sdPlugin/scripts/install-hooks.mjs --remove",
     "statusline:install": "node com.claudedeck.controls.sdPlugin/scripts/install-hooks.mjs --statusline",
-    "profile:build": "node scripts/build-profile.mjs"
+    "profile:build": "node scripts/build-profile.mjs",
+    "validate": "streamdeck validate com.claudedeck.controls.sdPlugin",
+    "package": "npm run build && npm run validate && streamdeck pack com.claudedeck.controls.sdPlugin --output dist --force --no-update-check"
   },
   "dependencies": {
     "@elgato/streamdeck": "^3.0.6"
