@@ -15,8 +15,10 @@ export const hookServerStatus: { listening: boolean; error: string | undefined }
  * as JSON `POST /event` requests, and status line updates as JSON `POST /statusline` requests,
  * and applies them to the session store.
  * Every request is answered immediately with an empty JSON object, so hooks never delay Claude Code.
+ * @param port Port to listen on. Port 0 lets the system choose a free one.
+ * @param host Interface address to listen on.
  */
-export function startHookServer(store: SessionStore, log: Log): Server {
+export function startHookServer(store: SessionStore, log: Log, port: number = HOOK_PORT, host: string = HOOK_HOST): Server {
 	const server = createServer((req, res) => {
 		const respond = (status: number): void => {
 			res.writeHead(status, { "Content-Type": "application/json" });
@@ -69,15 +71,17 @@ export function startHookServer(store: SessionStore, log: Log): Server {
 		hookServerStatus.error = err.code === "EADDRINUSE" ? "port in use" : err.message;
 		log.error(
 			err.code === "EADDRINUSE"
-				? `Hook server could not start: port ${HOOK_PORT} is already in use`
+				? `Hook server could not start: port ${port} is already in use`
 				: `Hook server error: ${err.message}`,
 		);
 	});
 
-	server.listen(HOOK_PORT, HOOK_HOST, () => {
+	server.listen(port, host, () => {
+		const address = server.address();
+		const boundPort = typeof address === "object" && address !== null ? address.port : port;
 		hookServerStatus.listening = true;
 		hookServerStatus.error = undefined;
-		log.info(`Hook server listening on http://${HOOK_HOST}:${HOOK_PORT}/event`);
+		log.info(`Hook server listening on http://${host}:${boundPort}/event`);
 	});
 	// The server must not keep the process alive, so the plugin exits when Stream Deck disconnects.
 	server.unref();
