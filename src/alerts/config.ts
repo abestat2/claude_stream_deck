@@ -18,8 +18,8 @@ export const DEFAULT_ALERT_SETTINGS: AlertSettings = { sound: true, toast: true,
  */
 export function parseAlertSettings(raw: unknown): AlertSettings {
 	const values = (typeof raw === "object" && raw !== null ? raw : {}) as Record<string, unknown>;
-	const raw = values.escalateMinutes;
-	const minutes = typeof raw === "number" ? raw : typeof raw === "string" && raw.trim() !== "" ? Number(raw) : Number.NaN;
+	const rawMinutes = values.escalateMinutes;
+	const minutes = typeof rawMinutes === "number" ? rawMinutes : typeof rawMinutes === "string" && rawMinutes.trim() !== "" ? Number(rawMinutes) : Number.NaN;
 	return {
 		sound: values.alertSound !== false,
 		toast: values.alertToast !== false,
