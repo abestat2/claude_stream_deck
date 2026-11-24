@@ -1,14 +1,15 @@
 // Builds the Stream Deck profile that ships with the plugin.
 //
-// Usage: node scripts/build-profile.mjs [output file]
+// Usage: node scripts/build-profile.mjs [output file] [manifest file]
 //
 // Writes com.claudedeck.controls.sdPlugin/profiles/ClaudeDeck.streamDeckProfile, or the output file when one
-// is given. The profile is a Stream Deck + layout
+// is given. The plugin version recorded in the profile is the version in the plugin manifest, or in the manifest
+// file when one is given. The profile is a Stream Deck + layout
 // with the plugin's actions already placed. Edit the layout below and run the script to regenerate it.
 // Identifiers are derived from fixed names, so rebuilding produces the same file.
 
 import { createHash } from "node:crypto";
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { crc32 } from "node:zlib";
@@ -22,7 +23,17 @@ const PROFILE_NAME = "Claude Deck";
 /** Device model identifier of the Stream Deck +. */
 const DEVICE_MODEL = "20GBD9901";
 
-const PLUGIN = { Name: "Claude Deck", UUID: "com.claudedeck.controls", Version: "0.1.0.0" };
+const MANIFEST = process.argv[3]
+  ? resolve(process.argv[3])
+  : resolve(dirname(fileURLToPath(import.meta.url)), "../com.claudedeck.controls.sdPlugin/manifest.json");
+
+const manifestVersion = JSON.parse(readFileSync(MANIFEST, "utf8")).Version;
+if (typeof manifestVersion !== "string" || manifestVersion === "") {
+  console.error(`${MANIFEST} has no version: the manifest needs a "Version" field`);
+  process.exit(1);
+}
+
+const PLUGIN = { Name: "Claude Deck", UUID: "com.claudedeck.controls", Version: manifestVersion };
 
 /** Builds a stable UUID from a name. */
 function uuid(name) {

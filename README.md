@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/demo.gif" alt="The Claude Deck layout in the Stream Deck app: usage, context, permission mode, and connection keys on the top row; permission response, yes, /graphify, and status keys on the bottom row; and four dials below" width="492">
+  <img src="docs/demo.gif" alt="The Claude Deck plugin in the Stream Deck app: keys for permission response, permission mode, connection, context, and the animated status character, and dials for sessions, saved prompts, usage, and the model" width="516">
 </p>
 
 <h1 align="center">Claude Deck</h1>
@@ -17,7 +17,7 @@
   <img alt="Built with TypeScript" src="https://img.shields.io/badge/built%20with-TypeScript-3178C6">
   <img alt="Node.js 24 or later" src="https://img.shields.io/badge/Node.js-24%2B-339933">
   <img alt="Stream Deck SDK 3" src="https://img.shields.io/badge/Stream%20Deck%20SDK-3-5b5b5b">
-  <img alt="Version 0.1.0" src="https://img.shields.io/badge/version-0.1.0-lightgrey">
+  <a href="https://github.com/abestat2/claude_stream_deck/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/abestat2/claude_stream_deck"></a>
 </p>
 
 A Stream Deck plugin that shows the state of Claude Code sessions and sends input to them from a Stream Deck +.
@@ -195,6 +195,24 @@ tests/         mirrors src/
 ```
 
 The tests replace the keyboard, the network, the Stream Deck SDK, and the Claude settings files, so running them never types, connects, or touches real settings.
+
+### Branches, checks, and releases
+
+Changes are made on a branch and merged into `master` through a pull request. Two GitHub Actions workflows in `.github/workflows/` run the checks and publish the releases:
+
+| Workflow | File | Runs when | What it does |
+|---|---|---|---|
+| CI | `ci.yml` | A branch other than `master` is pushed, and on pull requests into `master` | Installs dependencies, type-checks, runs the tests, builds, validates, and packages the plugin, and attaches the package to the run |
+| Release | `release.yml` | Changes reach `master` | Does the same, then publishes a GitHub release with the package attached and notes generated from the merged pull requests |
+
+Versions come from the release tags:
+
+- A release from `master` raises the minor number of the latest release: `0.1.0`, then `0.2.0`, then `0.3.0`.
+- A branch build raises the patch number of the latest release by the number of commits the branch has beyond `master`: after `0.2.0`, a branch with one commit builds `0.2.1` and with two commits builds `0.2.2`.
+- The version in `package.json` is the base. When it is higher than the version the rules would choose, it is used instead, so raising it by hand moves to a new major or minor number.
+- The plugin manifest holds the version with a fourth number (`0.2.0` is `0.2.0.0`).
+
+`scripts/next-version.mjs` chooses the version and `scripts/set-version.mjs` writes it to `package.json`, the lockfile, the manifest, and the preset profile. The workflows run them in the build, so the files in the repository keep the base version. The test runner is Vitest, configured in `vitest.config.ts` and run with `npm test`.
 
 ## License
 
