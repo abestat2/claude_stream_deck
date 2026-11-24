@@ -1,8 +1,9 @@
 // Builds the Stream Deck profile that ships with the plugin.
 //
-// Usage: node scripts/build-profile.mjs
+// Usage: node scripts/build-profile.mjs [output file]
 //
-// Writes com.claudedeck.controls.sdPlugin/profiles/ClaudeDeck.streamDeckProfile, a Stream Deck + layout
+// Writes com.claudedeck.controls.sdPlugin/profiles/ClaudeDeck.streamDeckProfile, or the output file when one
+// is given. The profile is a Stream Deck + layout
 // with the plugin's actions already placed. Edit the layout below and run the script to regenerate it.
 // Identifiers are derived from fixed names, so rebuilding produces the same file.
 
@@ -12,7 +13,9 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { crc32 } from "node:zlib";
 
-const OUTPUT = resolve(dirname(fileURLToPath(import.meta.url)), "../com.claudedeck.controls.sdPlugin/profiles/ClaudeDeck.streamDeckProfile");
+const OUTPUT = process.argv[2]
+  ? resolve(process.argv[2])
+  : resolve(dirname(fileURLToPath(import.meta.url)), "../com.claudedeck.controls.sdPlugin/profiles/ClaudeDeck.streamDeckProfile");
 
 const PROFILE_NAME = "Claude Deck";
 
